@@ -99,7 +99,7 @@ export default function Login() {
             Don't have an account?{" "}
             <Text
               style={styles.link}
-              onPressIn={() => router.push("/auth/register")}
+              onPress={() => router.push("/auth/register")}
             >
               Register here
             </Text>
@@ -189,6 +189,6 @@ const styles = StyleSheet.create({
   },
   link: {
     color: "#1E90FF",
-    textDecorationLine: "underline",
+    textDecorationLine: "none",
   },
 });
