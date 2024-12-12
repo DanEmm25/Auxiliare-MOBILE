@@ -1,3 +1,4 @@
+import axios from "axios";
 import React, { useState } from "react";
 import {
   View,
@@ -6,11 +7,11 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
-import { useRouter } from "expo-router";
 import {
   EyeIcon,
   EyeOffIcon,
@@ -19,14 +20,102 @@ import {
   MailIcon,
   UserCircleIcon,
   UsersIcon,
-  CheckIcon, // Added CheckIcon
+  CheckIcon,
 } from "lucide-react-native";
+import { useRouter } from "expo-router";
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [isChecked, setIsChecked] = useState(false); // Added state for checkbox
+  const [isLoading, setIsLoading] = useState(false); // Add loading state
   const router = useRouter();
+
+  // Update API URL configuration
+  const API_URL = __DEV__
+    ? Platform.select({
+        android: "http://10.0.2.2:8082",
+        ios: "http://localhost:8082",
+        default: "http://192.168.1.100:8082", // Replace with your actual computer's IP
+      })
+    : "http://your-production-url.com";
+
+  const handleRegister = async () => {
+    setIsLoading(true);
+    try {
+      // Validate required fields
+      if (
+        !username ||
+        !email ||
+        !password ||
+        !firstName ||
+        !lastName ||
+        !userType
+      ) {
+        alert("All fields are required");
+        return;
+      }
+
+      if (!isChecked) {
+        alert("You must agree to the Terms of Service and Privacy Policy");
+        return;
+      }
+
+      // Log the data being sent
+      const registrationData = {
+        username,
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName,
+        user_type: userType,
+      };
+      console.log("Sending registration data:", registrationData);
+
+      console.log("Connecting to:", `${API_URL}/register`);
+
+      const response = await axios.post(
+        `${API_URL}/register`,
+        registrationData,
+        {
+          timeout: 20000, // Increased timeout to 20 seconds
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("Server response:", response.data);
+
+      if (response.data.success) {
+        alert("Registration successful!");
+        router.push("/auth/login");
+      }
+    } catch (error: any) {
+      console.error("Full error object:", error);
+
+      if (error.response) {
+        // Server responded with error
+        console.error("Server error response:", error.response.data);
+        alert(error.response.data.message || "Registration failed!");
+      } else if (error.request) {
+        // Request made but no response
+        console.error("No response received:", error.request);
+        alert("No response from server. Please try again.");
+      } else {
+        // Error in request setup
+        console.error("Request setup error:", error.message);
+        alert("Error setting up request: " + error.message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -38,7 +127,12 @@ export default function Register() {
             <Text style={styles.label}>Username</Text>
             <View style={styles.inputWrapper}>
               <UserIcon style={styles.icon} />
-              <TextInput style={styles.input} placeholder="Choose a username" />
+              <TextInput
+                style={styles.input}
+                placeholder="Choose a username"
+                value={username}
+                onChangeText={setUsername}
+              />
             </View>
           </View>
           <View style={styles.inputGroup}>
@@ -49,6 +143,8 @@ export default function Register() {
                 style={styles.input}
                 placeholder="Enter your email"
                 keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
               />
             </View>
           </View>
@@ -60,6 +156,8 @@ export default function Register() {
                 style={styles.input}
                 placeholder="Create a password"
                 secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -91,6 +189,8 @@ export default function Register() {
               <TextInput
                 style={styles.input}
                 placeholder="Enter your first name"
+                value={firstName}
+                onChangeText={setFirstName}
               />
             </View>
           </View>
@@ -101,6 +201,8 @@ export default function Register() {
               <TextInput
                 style={styles.input}
                 placeholder="Enter your last name"
+                value={lastName}
+                onChangeText={setLastName}
               />
             </View>
           </View>
@@ -125,23 +227,24 @@ export default function Register() {
           </View>
           <View style={styles.checkboxContainer}>
             <TouchableOpacity
-              style={[
-                styles.checkbox,
-                isChecked && styles.checkboxChecked, 
-              ]}
+              style={[styles.checkbox, isChecked && styles.checkboxChecked]}
               onPress={() => setIsChecked(!isChecked)}
             >
               {isChecked && <CheckIcon size={16} color="#fff" />}
             </TouchableOpacity>
             <Text style={styles.checkboxLabel}>
-              I agree to the <Text style={styles.link}>Terms of Service</Text> and <Text style={styles.link}>Privacy Policy</Text>
+              I agree to the <Text style={styles.link}>Terms of Service</Text>{" "}
+              and <Text style={styles.link}>Privacy Policy</Text>
             </Text>
           </View>
           <TouchableOpacity
-            style={styles.button}
-            onPress={() => router.push("/auth/login")}
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            onPress={handleRegister}
+            disabled={isLoading}
           >
-            <Text style={styles.buttonText}>Register</Text>
+            <Text style={styles.buttonText}>
+              {isLoading ? "Registering..." : "Register"}
+            </Text>
           </TouchableOpacity>
           <Text style={styles.footerText}>
             Already have an account?{" "}
@@ -262,5 +365,8 @@ const styles = StyleSheet.create({
   borderedInput: {
     borderWidth: 1,
     borderColor: "#000",
+  },
+  buttonDisabled: {
+    opacity: 0.7,
   },
 });
