@@ -32,18 +32,20 @@ export default function Register() {
   const [username, setUsername] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [isChecked, setIsChecked] = useState(false); // Added state for checkbox
-  const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isChecked, setIsChecked] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   // Update API URL configuration
   const API_URL = __DEV__
     ? Platform.select({
-        android: "http://10.0.2.2:8082",
-        ios: "http://localhost:8082",
-        default: "http://192.168.1.100:8082", // Replace with your actual computer's IP
+        android: "http://192.168.1.45:8081", // Replace with your computer's IP address
+        ios: "http://192.168.1.45:8081", // Replace with your computer's IP address
+        default: "http://192.168.1.45:8081",
       })
     : "http://your-production-url.com";
+
+  console.log("API_URL:", API_URL); // Add this line to log the API_URL
 
   const handleRegister = async () => {
     setIsLoading(true);
@@ -77,10 +79,10 @@ export default function Register() {
       };
       console.log("Sending registration data:", registrationData);
 
-      console.log("Connecting to:", `${API_URL}/register`);
+      console.log("Connecting to:", `${API_URL}/register`); // Ensure this is /register
 
       const response = await axios.post(
-        `${API_URL}/register`,
+        `${API_URL}/register`, // Ensure this is /register
         registrationData,
         {
           timeout: 20000, // Increased timeout to 20 seconds
