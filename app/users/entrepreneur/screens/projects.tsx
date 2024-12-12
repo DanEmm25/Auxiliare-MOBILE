@@ -1,196 +1,146 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, FlatList, TouchableOpacity, Dimensions, Animated, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+} from 'react-native';
+import { Picker } from '@react-native-picker/picker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import EntrepreneurLayout from '../layout';
-import { LinearGradient } from 'expo-linear-gradient';
 
-// Mock data
-const projectsData = {
-  projects: [
-    {
-      id: 1,
-      name: 'Project Alpha',
-      thumbnail: 'https://picsum.photos/200',
-      status: 'Active',
-      current_funding: 50000,
-      funding_goal: 100000,
-    },
-    // ... more projects
-  ],
-  milestones: [
-    {
-      id: 1,
-      name: 'Initial Planning',
-      status: 'Completed',
-      target_amount: 10000,
-      deadline: '2024-02-01',
-    },
-    // ... more milestones
-  ],
-  pitchSessions: [
-    {
-      id: 1,
-      title: 'Investor Pitch',
-      date: '2024-02-15',
-      time: '14:00',
-      status: 'Scheduled',
-      meetingLink: 'https://meet.example.com',
-    },
-    // ... more sessions
-  ],
-};
-
-const ProjectCard = ({ project }) => {
-  const scaleAnim = React.useRef(new Animated.Value(1)).current;
-
-  const onPressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.98,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  const onPressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-    }).start();
-  };
-
-  return (
-    <Animated.View
-      style={[
-        styles.projectCard,
-        { transform: [{ scale: scaleAnim }] }
-      ]}
-    >
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        style={styles.projectCardContent}
-      >
-        <Image source={{ uri: project.thumbnail }} style={styles.projectThumbnail} />
-        <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.7)']}
-          style={styles.thumbnailOverlay}
-        >
-          <Text style={styles.projectTitle}>{project.name}</Text>
-          <View style={styles.statusBadge}>
-            <Text style={styles.statusText}>{project.status}</Text>
-          </View>
-        </LinearGradient>
-
-        <View style={styles.projectInfo}>
-          <View style={styles.progressSection}>
-            <View style={styles.progressBarContainer}>
-              <Animated.View 
-                style={[
-                  styles.progressBar,
-                  { width: `${(project.current_funding / project.funding_goal) * 100}%` }
-                ]} 
-              />
-            </View>
-            <Text style={styles.fundingText}>
-              ₱{project.current_funding.toLocaleString()} / ₱{project.funding_goal.toLocaleString()}
-            </Text>
-          </View>
-
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="create-outline" size={20} color="#007AFF" />
-              <Text style={styles.actionText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="eye-outline" size={20} color="#007AFF" />
-              <Text style={styles.actionText}>View</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton}>
-              <Ionicons name="calendar-outline" size={20} color="#007AFF" />
-              <Text style={styles.actionText}>Schedule</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-};
-
-const MilestoneItem = ({ milestone }) => (
-  <View style={[
-    styles.milestoneItem,
-    { borderLeftColor: milestone.status === 'Completed' ? '#34C759' : '#FF3B30' }
-  ]}>
-    <Text style={styles.milestoneName}>{milestone.name}</Text>
-    <Text style={styles.milestoneDetails}>
-      Target: ₱{milestone.target_amount.toLocaleString()}
-    </Text>
-    <Text style={styles.milestoneDeadline}>Due: {milestone.deadline}</Text>
-  </View>
-);
-
-const PitchSessionItem = ({ session }) => (
-  <View style={styles.pitchSessionItem}>
-    <View style={styles.sessionInfo}>
-      <Text style={styles.sessionTitle}>{session.title}</Text>
-      <Text style={styles.sessionDateTime}>{session.date} at {session.time}</Text>
-      <Text style={styles.sessionStatus}>{session.status}</Text>
-    </View>
-    {session.status === 'Scheduled' && (
-      <TouchableOpacity style={styles.joinButton}>
-        <Text style={styles.joinButtonText}>Join</Text>
-      </TouchableOpacity>
-    )}
-  </View>
-);
+const categories = [
+  'Education',
+  'Healthcare',
+  'Technology',
+  'Environment',
+  'Social Enterprise',
+  'Agriculture',
+  'Others',
+];
 
 export default function Projects() {
+  const [projectData, setProjectData] = useState({
+    title: '',
+    description: '',
+    fundingGoal: '',
+    category: 'Education',
+    startDate: new Date(),
+    endDate: new Date(),
+  });
+
+  const [showStartDate, setShowStartDate] = useState(false);
+  const [showEndDate, setShowEndDate] = useState(false);
+
+  const handleSubmit = () => {
+    // Handle project creation logic here
+    console.log('Project Data:', projectData);
+  };
+
   return (
     <EntrepreneurLayout>
-      <FlatList
-        style={styles.container}
-        ListHeaderComponent={() => (
-          <>
-            <View style={styles.header}>
-              <Text style={styles.headerTitle}>My Projects</Text>
-              <TouchableOpacity style={styles.newProjectButton}>
-                <Text style={styles.newProjectButtonText}>New Project</Text>
-              </TouchableOpacity>
-            </View>
-            
-            {/* Projects Grid */}
-            <FlatList
-              data={projectsData.projects}
-              renderItem={({ item }) => <ProjectCard project={item} />}
-              keyExtractor={item => item.id.toString()}
-              numColumns={2}
-              horizontal={false}
-              style={styles.projectsGrid}
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Create New Project</Text>
+        </View>
+
+        <View style={styles.form}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Project Title</Text>
+            <TextInput
+              style={styles.input}
+              value={projectData.title}
+              onChangeText={(text) => setProjectData({...projectData, title: text})}
+              placeholder="Enter project title"
             />
-            
-            {/* Milestones Timeline */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Milestones Timeline</Text>
-              {projectsData.milestones.map(milestone => (
-                <MilestoneItem key={milestone.id} milestone={milestone} />
-              ))}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Description</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={projectData.description}
+              onChangeText={(text) => setProjectData({...projectData, description: text})}
+              placeholder="Describe your project"
+              multiline
+              numberOfLines={4}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Funding Goal (₱)</Text>
+            <TextInput
+              style={styles.input}
+              value={projectData.fundingGoal}
+              onChangeText={(text) => setProjectData({...projectData, fundingGoal: text})}
+              placeholder="Enter amount"
+              keyboardType="numeric"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Category</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={projectData.category}
+                onValueChange={(value) => setProjectData({...projectData, category: value})}
+                style={styles.picker}
+              >
+                {categories.map((category) => (
+                  <Picker.Item key={category} label={category} value={category} />
+                ))}
+              </Picker>
             </View>
-            
-            {/* Pitch Sessions */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Upcoming Pitches</Text>
-                <TouchableOpacity style={styles.scheduleButton}>
-                  <Text style={styles.scheduleButtonText}>Schedule New</Text>
-                </TouchableOpacity>
-              </View>
-              {projectsData.pitchSessions.map(session => (
-                <PitchSessionItem key={session.id} session={session} />
-              ))}
-            </View>
-          </>
-        )}
-      />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Start Date</Text>
+            <TouchableOpacity 
+              style={styles.dateButton}
+              onPress={() => setShowStartDate(true)}
+            >
+              <Text>{projectData.startDate.toLocaleDateString()}</Text>
+            </TouchableOpacity>
+            {showStartDate && (
+              <DateTimePicker
+                value={projectData.startDate}
+                mode="date"
+                onChange={(event, date) => {
+                  setShowStartDate(false);
+                  if (date) setProjectData({...projectData, startDate: date});
+                }}
+              />
+            )}
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>End Date</Text>
+            <TouchableOpacity 
+              style={styles.dateButton}
+              onPress={() => setShowEndDate(true)}
+            >
+              <Text>{projectData.endDate.toLocaleDateString()}</Text>
+            </TouchableOpacity>
+            {showEndDate && (
+              <DateTimePicker
+                value={projectData.endDate}
+                mode="date"
+                onChange={(event, date) => {
+                  setShowEndDate(false);
+                  if (date) setProjectData({...projectData, endDate: date});
+                }}
+              />
+            )}
+          </View>
+
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Create Project</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </EntrepreneurLayout>
   );
 }
@@ -202,164 +152,62 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E9ECEF',
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
   },
-  projectsGrid: {
-    padding: 10,
+  form: {
+    padding: 20,
   },
-  projectCard: {
-    flex: 1,
-    margin: 8,
-    borderRadius: 16,
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#1a1a1a',
+  },
+  input: {
     backgroundColor: '#FFF',
-    overflow: 'hidden',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
-  },
-  projectCardContent: {
-    flex: 1,
-  },
-  projectThumbnail: {
-    width: '100%',
-    height: 160,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  thumbnailOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 16,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-  },
-  projectTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFF',
-    marginBottom: 4,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  projectInfo: {
-    padding: 16,
-  },
-  progressSection: {
-    marginBottom: 16,
-  },
-  progressBarContainer: {
-    height: 8,
-    backgroundColor: '#E9ECEF',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBar: {
-    height: '100%',
-    backgroundColor: '#007AFF',
-    borderRadius: 4,
-  },
-  fundingText: {
-    marginTop: 8,
-    fontSize: 14,
-    color: '#666',
-    fontWeight: '600',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E9ECEF',
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 8,
+    padding: 12,
     borderRadius: 8,
-    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
   },
-  actionText: {
-    marginLeft: 4,
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#007AFF',
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
   },
-  milestoneItem: {
+  pickerContainer: {
     backgroundColor: '#FFF',
-    padding: 16,
-    marginVertical: 8,
-    borderRadius: 12,
-    borderLeftWidth: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  pitchSessionItem: {
-    backgroundColor: '#FFF',
-    padding: 16,
-    marginVertical: 8,
-    borderRadius: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  joinButton: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
   },
-  joinButtonText: {
+  picker: {
+    height: 50,
+  },
+  dateButton: {
+    backgroundColor: '#FFF',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
+  },
+  submitButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  submitButtonText: {
     color: '#FFF',
+    fontSize: 16,
     fontWeight: '600',
   },
-  // ... remaining styles
 });

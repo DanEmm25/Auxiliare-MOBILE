@@ -29,8 +29,6 @@ export default function Login() {
       router.push("/users/entrepreneur/screens/dashboard");
     } else if (userType === "Investor") {
       router.push("/users/investor/dashboard");
-    } else if (userType === "Admin") {
-      router.push("/users/admin/dashboard");
     } else {
       alert("Please select a valid user type.");
     }
@@ -66,7 +64,6 @@ export default function Login() {
                   value=""
                   enabled={false}
                 />
-                <Picker.Item label="Admin" value="Admin" />
                 <Picker.Item label="Entrepreneur" value="Entrepreneur" />
                 <Picker.Item label="Investor" value="Investor" />
               </Picker>

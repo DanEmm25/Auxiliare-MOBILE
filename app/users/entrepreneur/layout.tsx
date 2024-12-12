@@ -29,7 +29,6 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
       "/users/entrepreneur/screens/home": "Home",
       "/users/entrepreneur/screens/dashboard": "Dashboard",
       "/users/entrepreneur/screens/projects": "Projects",
-      "/users/entrepreneur/screens/pitch-sessions": "Pitch Sessions",
       "/users/entrepreneur/screens/messages": "Messages",
       "/users/entrepreneur/screens/notifications": "Notifications",
       "/users/entrepreneur/screens/profile": "Profile",
@@ -43,7 +42,6 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
       Home: "/users/entrepreneur/screens/home",
       Dashboard: "/users/entrepreneur/screens/dashboard",
       Projects: "/users/entrepreneur/screens/projects",
-      "Pitch Sessions": "/users/entrepreneur/screens/pitch-sessions",
       Messages: "/users/entrepreneur/screens/messages",
       Notifications: "/users/entrepreneur/screens/notifications",
       Profile: "/users/entrepreneur/screens/profile",
@@ -190,30 +188,6 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
             <TouchableOpacity
               style={[
                 styles.navItem,
-                currentRoute === "Pitch Sessions" && styles.activeNavItem,
-              ]}
-              onPress={() => handleNavigation("Pitch Sessions")}
-            >
-              <Ionicons
-                name="megaphone"
-                size={22}
-                color={currentRoute === "Pitch Sessions" ? "#007AFF" : "#666"}
-              />
-              {isOpen && (
-                <Animated.Text
-                  style={[
-                    styles.navText,
-                    currentRoute === "Pitch Sessions" && styles.activeNavText,
-                  ]}
-                  numberOfLines={1}
-                >
-                  Pitch Sessions
-                </Animated.Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.navItem,
                 currentRoute === "Messages" && styles.activeNavItem,
               ]}
               onPress={() => handleNavigation("Messages")}
@@ -250,7 +224,7 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
               {isOpen && (
                 <Animated.Text
                   style={[
-                    styles.navText,
+                    styles.navText  ,
                     currentRoute === "Notifications" && styles.activeNavText,
                   ]}
                   numberOfLines={1}

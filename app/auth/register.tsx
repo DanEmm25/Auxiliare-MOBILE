@@ -118,7 +118,6 @@ export default function Register() {
                   value=""
                   enabled={false}
                 />
-                <Picker.Item label="Admin" value="Admin" />
                 <Picker.Item label="Entrepreneur" value="Entrepreneur" />
                 <Picker.Item label="Investor" value="Investor" />
               </Picker>
