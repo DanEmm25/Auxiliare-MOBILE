@@ -133,6 +133,80 @@ app.post("/register", async (req, res) => {
   }
 });
 
+app.post("/login", async (req, res) => {
+  console.log('Received login request:', req.body);
+  
+  const { identifier, password } = req.body;
+
+  // Log the extracted fields
+  console.log('Identifier:', identifier);
+  console.log('Password:', password);
+
+  // Detailed validation logging
+  if (!identifier || !password) {
+    console.log('Missing fields:', { 
+      hasIdentifier: !!identifier, 
+      hasPassword: !!password 
+    });
+    return res.status(400).json({
+      success: false,
+      message: "Email/Username and password are required"
+    });
+  }
+
+  try {
+    const sql = "SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1";
+    console.log('Executing query with identifier:', identifier);
+    
+    db.query(sql, [identifier, identifier], async (err, results) => {
+      if (err) {
+        console.error("Login query error:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Database error occurred"
+        });
+      }
+
+      if (results.length === 0) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid credentials"
+        });
+      }
+
+      const user = results[0];
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid credentials"
+        });
+      }
+
+      res.status(200).json({
+        success: true,
+        message: "Login successful",
+        userType: user.user_type,
+        userData: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          accountStatus: user.account_status
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Login error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred"
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

@@ -21,16 +21,56 @@ import { useRouter } from "expo-router";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
-  const [userType, setUserType] = useState("");
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = () => {
-    if (userType === "Entrepreneur") {
-      router.push("/users/entrepreneur/screens/dashboard");
-    } else if (userType === "Investor") {
-      router.push("/users/investor/dashboard");
-    } else {
-      alert("Please select a valid user type.");
+  const handleLogin = async () => {
+    setIsLoading(true);
+    console.log('Login attempt with:', { identifier, password });
+
+    try {
+      if (!identifier.trim() || !password.trim()) {
+        alert("Please enter your email/username and password.");
+        return;
+      }
+
+      const requestData = {
+        identifier: identifier.trim(),
+        password: password.trim()
+      };
+
+      console.log('Sending request with:', requestData);
+
+      const response = await fetch("http://192.168.1.45:8081/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      if (data.success) {
+        // Navigate based on user type
+        if (data.userType === "Entrepreneur") {
+          router.push("/users/entrepreneur/screens/dashboard");
+        } else if (data.userType === "Investor") {
+          router.push("/users/investor/dashboard");
+        }
+      } else {
+        alert(data.message || "Login failed");
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      alert(error.message || "An error occurred during login");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -41,32 +81,15 @@ export default function Login() {
         <View style={styles.formContainer}>
           <Text style={styles.title}>Log In</Text>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Username</Text>
+            <Text style={styles.label}>Email or Username</Text>
             <View style={styles.inputWrapper}>
               <UserIcon style={styles.icon} />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your username"
+                placeholder="Enter your email or username"
+                value={identifier}
+                onChangeText={setIdentifier}
               />
-            </View>
-          </View>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Role</Text>
-            <View style={styles.inputWrapper}>
-              <UsersIcon style={styles.icon} />
-              <Picker
-                selectedValue={userType}
-                onValueChange={(itemValue) => setUserType(itemValue)}
-                style={[styles.input, { marginLeft: -10 }]}
-              >
-                <Picker.Item
-                  label="Select User Type"
-                  value=""
-                  enabled={false}
-                />
-                <Picker.Item label="Entrepreneur" value="Entrepreneur" />
-                <Picker.Item label="Investor" value="Investor" />
-              </Picker>
             </View>
           </View>
           <View style={styles.inputGroup}>
@@ -77,6 +100,8 @@ export default function Login() {
                 style={styles.input}
                 placeholder="Enter your password"
                 secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -89,8 +114,14 @@ export default function Login() {
           <TouchableOpacity>
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Log In</Text>
+          <TouchableOpacity 
+            style={[styles.button, isLoading && styles.buttonDisabled]} 
+            onPress={handleLogin}
+            disabled={isLoading}
+          >
+            <Text style={styles.buttonText}>
+              {isLoading ? "Logging in..." : "Log In"}
+            </Text>
           </TouchableOpacity>
           <Text style={styles.footerText}>
             Don't have an account?{" "}
