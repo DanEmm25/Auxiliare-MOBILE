@@ -209,6 +209,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  buttonDisabled: {
+    backgroundColor: "#ccc",
+  },
   footerText: {
     marginTop: 20,
     textAlign: "center",
