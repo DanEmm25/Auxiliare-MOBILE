@@ -118,43 +118,43 @@ app.post("/register", async (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  console.log('Received login request:', req.body);
-  
+  console.log("Received login request:", req.body);
+
   const { identifier, password } = req.body;
 
   // Log the extracted fields
-  console.log('Identifier:', identifier);
-  console.log('Password:', password);
+  console.log("Identifier:", identifier);
+  console.log("Password:", password);
 
   // Detailed validation logging
   if (!identifier || !password) {
-    console.log('Missing fields:', { 
-      hasIdentifier: !!identifier, 
-      hasPassword: !!password 
+    console.log("Missing fields:", {
+      hasIdentifier: !!identifier,
+      hasPassword: !!password,
     });
     return res.status(400).json({
       success: false,
-      message: "Email/Username and password are required"
+      message: "Email/Username and password are required",
     });
   }
 
   try {
     const sql = "SELECT * FROM users WHERE username = ? OR email = ? LIMIT 1";
-    console.log('Executing query with identifier:', identifier);
-    
+    console.log("Executing query with identifier:", identifier);
+
     db.query(sql, [identifier, identifier], async (err, results) => {
       if (err) {
         console.error("Login query error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error occurred"
+          message: "Database error occurred",
         });
       }
 
       if (results.length === 0) {
         return res.status(401).json({
           success: false,
-          message: "Invalid credentials"
+          message: "Invalid credentials",
         });
       }
 
@@ -164,7 +164,7 @@ app.post("/login", async (req, res) => {
       if (!isPasswordValid) {
         return res.status(401).json({
           success: false,
-          message: "Invalid credentials"
+          message: "Invalid credentials",
         });
       }
 
@@ -178,15 +178,113 @@ app.post("/login", async (req, res) => {
           email: user.email,
           firstName: user.first_name,
           lastName: user.last_name,
-          accountStatus: user.account_status
-        }
+          accountStatus: user.account_status,
+        },
       });
     });
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error occurred"
+      message: "Server error occurred",
+    });
+  }
+});
+
+app.post("/create-project", async (req, res) => {
+  const {
+    user_id,
+    title,
+    description,
+    funding_goal,
+    category,
+    start_date,
+    end_date,
+  } = req.body;
+
+  // Log the received data
+  console.log("Received project data:", {
+    user_id,
+    title,
+    description,
+    funding_goal,
+    category,
+    start_date,
+    end_date,
+  });
+
+  // Basic validation
+  if (
+    !user_id ||
+    !title ||
+    !description ||
+    !funding_goal ||
+    !category ||
+    !start_date ||
+    !end_date
+  ) {
+    console.log("Validation failed:", {
+      user_id,
+      title,
+      description,
+      funding_goal,
+      category,
+      start_date,
+      end_date,
+    });
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required",
+    });
+  }
+
+  try {
+    const sql =
+      "INSERT INTO projects (user_id, title, description, funding_goal, category, start_date, end_date, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    const created_at = new Date();
+    const updated_at = new Date();
+
+    // Log the SQL query
+    console.log("Executing SQL:", sql);
+
+    db.query(
+      sql,
+      [
+        user_id,
+        title,
+        description,
+        funding_goal,
+        category,
+        start_date,
+        end_date,
+        created_at,
+        updated_at,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Detailed Database error:", {
+            code: err.code,
+            errno: err.errno,
+            sqlMessage: err.sqlMessage,
+            sqlState: err.sqlState,
+          });
+          return res.status(500).json({
+            success: false,
+            message: "Database error occurred: " + err.sqlMessage,
+          });
+        }
+        console.log("Project creation successful:", result);
+        res.status(200).json({
+          success: true,
+          message: "Project created successfully",
+        });
+      }
+    );
+  } catch (error) {
+    console.error("Error creating project:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error occurred while creating project",
     });
   }
 });
