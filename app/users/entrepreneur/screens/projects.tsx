@@ -17,9 +17,7 @@ const categories = [
   'Healthcare',
   'Technology',
   'Environment',
-  'Social Enterprise',
-  'Agriculture',
-  'Others',
+  'Finance',
 ];
 
 export default function Projects() {

@@ -1,28 +1,12 @@
 const express = require("express");
-const mysql = require("mysql");
 const bodyParser = require("body-parser");
-const cors = require("cors"); // Add this line at the top
-const bcrypt = require("bcrypt"); // Add bcrypt for password hashing
+const cors = require("cors");
+const bcrypt = require("bcrypt");
+const db = require("./db"); // Import the database connection
 
 const app = express();
 const port = 8081;
-// MySQL connection
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "auxiliare_larva",
-});
 
-db.connect((err) => {
-  if (err) {
-    console.error("Error connecting to MySQL:", err);
-    process.exit(1); // Exit the process with an error code
-  }
-  console.log("MySQL connected...");
-});
-
-// Update CORS configuration
 app.use(
   cors({
     origin: "*", // Temporarily allow all origins
