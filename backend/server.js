@@ -194,7 +194,7 @@ app.post("/login", async (req, res) => {
       }
 
       const userPayload = {
-        id: user.user_id, // Change 'user.id' to 'user.user_id' if your primary key is 'user_id'
+        id: user.user_id, 
         username: user.username,
         user_type: user.user_type,
       };

@@ -188,15 +188,22 @@ export default function Projects() {
               style={styles.dateButton}
               onPress={() => setShowStartDate(true)}
             >
-              <Text>{projectData.startDate.toLocaleDateString()}</Text>
+              <Text>
+                {projectData.startDate
+                  ? projectData.startDate.toLocaleDateString()
+                  : "Select Start Date"}
+              </Text>
             </TouchableOpacity>
             {showStartDate && (
               <DateTimePicker
                 value={projectData.startDate}
                 mode="date"
+                display="default"
                 onChange={(event, date) => {
                   setShowStartDate(false);
-                  if (date) setProjectData({ ...projectData, startDate: date });
+                  if (date) {
+                    setProjectData({ ...projectData, startDate: date });
+                  }
                 }}
               />
             )}
@@ -208,15 +215,22 @@ export default function Projects() {
               style={styles.dateButton}
               onPress={() => setShowEndDate(true)}
             >
-              <Text>{projectData.endDate.toLocaleDateString()}</Text>
+              <Text>
+                {projectData.endDate
+                  ? projectData.endDate.toLocaleDateString()
+                  : "Select End Date"}
+              </Text>
             </TouchableOpacity>
             {showEndDate && (
               <DateTimePicker
                 value={projectData.endDate}
                 mode="date"
+                display="default"
                 onChange={(event, date) => {
                   setShowEndDate(false);
-                  if (date) setProjectData({ ...projectData, endDate: date });
+                  if (date) {
+                    setProjectData({ ...projectData, endDate: date });
+                  }
                 }}
               />
             )}
