@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { Picker } from "@react-native-picker/picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import EntrepreneurLayout from "../layout";
 import axios from "axios";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const categories = [
   "Education",
@@ -30,15 +31,43 @@ export default function Projects() {
     startDate: new Date(),
     endDate: new Date(),
   });
-
+  const [userData, setUserData] = useState(null);
   const [showStartDate, setShowStartDate] = useState(false);
   const [showEndDate, setShowEndDate] = useState(false);
 
+  useEffect(() => {
+    // Load user data when component mounts
+    const loadUserData = async () => {
+      try {
+        const userStr = await AsyncStorage.getItem('user');
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          setUserData(user);
+        }
+      } catch (error) {
+        console.error('Error loading user data:', error);
+      }
+    };
+    loadUserData();
+  }, []);
+
   const handleSubmit = async () => {
     try {
-      const userid = 1;
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("user");
+
+      console.log('Stored token:', token);
+      console.log('Stored user:', userStr);
+
+      if (!token || !userStr) {
+        alert("Authentication token or user data missing. Please log in again.");
+        return;
+      }
+
+      const user = JSON.parse(userStr);
+      console.log('Parsed user data:', user);
+
       const projectDataToSend = {
-        user_id: userid, // Use user ID from context
         title: projectData.title,
         description: projectData.description,
         funding_goal: parseFloat(projectData.fundingGoal),
@@ -48,6 +77,7 @@ export default function Projects() {
       };
 
       console.log("Sending project data:", projectDataToSend);
+      console.log("Using authorization token:", token);
 
       const response = await axios.post(
         "http://192.168.1.45:8081/create-project",
@@ -55,6 +85,7 @@ export default function Projects() {
         {
           headers: {
             "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
           },
         }
       );
@@ -63,12 +94,23 @@ export default function Projects() {
 
       if (response.data.success) {
         alert("Project created successfully!");
+        // Optionally clear the form
+        setProjectData({
+          title: "",
+          description: "",
+          fundingGoal: "",
+          category: "Education",
+          startDate: new Date(),
+          endDate: new Date(),
+        });
       } else {
         alert("Failed to create project: " + response.data.message);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating project:", error);
-      alert("An error occurred while creating the project.");
+      console.error("Error response:", error.response?.data);
+      const errorMessage = error.response?.data?.message || "An error occurred while creating the project.";
+      alert(errorMessage);
     }
   };
 

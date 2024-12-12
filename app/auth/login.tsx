@@ -18,6 +18,7 @@ import {
   UsersIcon,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -28,7 +29,7 @@ export default function Login() {
 
   const handleLogin = async () => {
     setIsLoading(true);
-    console.log('Login attempt with:', { identifier, password });
+    console.log("Login attempt with:", { identifier, password });
 
     try {
       if (!identifier.trim() || !password.trim()) {
@@ -38,25 +39,27 @@ export default function Login() {
 
       const requestData = {
         identifier: identifier.trim(),
-        password: password.trim()
+        password: password.trim(),
       };
 
-      console.log('Sending request with:', requestData);
+      console.log("Sending request with:", requestData);
 
       const response = await fetch("http://192.168.1.45:8081/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Accept": "application/json"
+          Accept: "application/json",
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(requestData),
       });
 
-      console.log('Response status:', response.status);
+      console.log("Response status:", response.status);
       const data = await response.json();
-      console.log('Response data:', data);
+      console.log("Response data:", data);
 
       if (data.success) {
+        await AsyncStorage.setItem("user", JSON.stringify(data.userData));
+        await AsyncStorage.setItem("token", data.token); // Store JWT token
         // Navigate based on user type
         if (data.userType === "Entrepreneur") {
           router.push("/users/entrepreneur/screens/dashboard");
@@ -114,8 +117,8 @@ export default function Login() {
           <TouchableOpacity>
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.button, isLoading && styles.buttonDisabled]} 
+          <TouchableOpacity
+            style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
           >

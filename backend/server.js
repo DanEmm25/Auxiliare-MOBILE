@@ -3,6 +3,8 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const db = require("./db"); // Import the database connection
+const jwt = require("jsonwebtoken"); // Add JWT package
+const secretKey = "your_secret_key"; // Replace with a secure key
 
 const app = express();
 const port = 8081;
@@ -18,6 +20,29 @@ app.use(bodyParser.json());
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
+
+// Authentication middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  
+  console.log('Auth Header:', authHeader);
+  console.log('Token:', token);
+
+  if (!token) {
+    return res.status(401).json({ success: false, message: "Access token missing" });
+  }
+
+  jwt.verify(token, secretKey, (err, user) => {
+    if (err) {
+      console.error('Token verification error:', err);
+      return res.status(403).json({ success: false, message: "Invalid token" });
+    }
+    console.log('Decoded user from token:', user);
+    req.user = user;
+    next();
+  });
+}
 
 app.post("/register", async (req, res) => {
   const { username, email, password, first_name, last_name, user_type } =
@@ -168,18 +193,19 @@ app.post("/login", async (req, res) => {
         });
       }
 
+      const userPayload = {
+        id: user.user_id, // Change 'user.id' to 'user.user_id' if your primary key is 'user_id'
+        username: user.username,
+        user_type: user.user_type,
+      };
+      const accessToken = jwt.sign(userPayload, secretKey, { expiresIn: '1h' }); // Generate token
+
       res.status(200).json({
         success: true,
         message: "Login successful",
         userType: user.user_type,
-        userData: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          firstName: user.first_name,
-          lastName: user.last_name,
-          accountStatus: user.account_status,
-        },
+        userData: userPayload,
+        token: accessToken, // Send token to client
       });
     });
   } catch (error) {
@@ -191,9 +217,19 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/create-project", async (req, res) => {
+app.post("/create-project", authenticateToken, async (req, res) => {
+  console.log('User from token:', req.user);
+  const user_id = req.user.id;
+  
+  if (!user_id) {
+    console.error('User ID missing in token payload');
+    return res.status(400).json({
+      success: false,
+      message: "User ID not found in token"
+    });
+  }
+
   const {
-    user_id,
     title,
     description,
     funding_goal,
@@ -215,7 +251,6 @@ app.post("/create-project", async (req, res) => {
 
   // Basic validation
   if (
-    !user_id ||
     !title ||
     !description ||
     !funding_goal ||
@@ -224,7 +259,6 @@ app.post("/create-project", async (req, res) => {
     !end_date
   ) {
     console.log("Validation failed:", {
-      user_id,
       title,
       description,
       funding_goal,
