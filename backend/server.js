@@ -428,6 +428,74 @@ app.delete("/delete-project/:projectId", authenticateToken, (req, res) => {
   });
 });
 
+// Get user profile endpoint
+app.get("/user-profile", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  
+  const sql = "SELECT user_id, username, email, first_name, last_name, user_type FROM users WHERE user_id = ?";
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching user profile"
+      });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+    res.status(200).json({
+      success: true,
+      user: results[0]
+    });
+  });
+});
+
+// Update user profile endpoint
+app.put("/update-profile", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  const { username, email, first_name, last_name } = req.body;
+
+  // Basic validation
+  if (!username || !email || !first_name || !last_name) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required"
+    });
+  }
+
+  const sql = `
+    UPDATE users 
+    SET username = ?, email = ?, first_name = ?, last_name = ?, updated_at = ? 
+    WHERE user_id = ?`;
+
+  db.query(
+    sql,
+    [username, email, first_name, last_name, new Date(), userId],
+    (err, result) => {
+      if (err) {
+        console.error("Update error:", err);
+        if (err.code === 'ER_DUP_ENTRY') {
+          return res.status(400).json({
+            success: false,
+            message: "Username or email already exists"
+          });
+        }
+        return res.status(500).json({
+          success: false,
+          message: "Error updating profile"
+        });
+      }
+      res.status(200).json({
+        success: true,
+        message: "Profile updated successfully"
+      });
+    }
+  );
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
