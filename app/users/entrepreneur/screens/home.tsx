@@ -9,11 +9,14 @@ import {
   RefreshControl,
   Modal,
   TextInput,
+  Platform,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import EntrepreneurLayout from "../layout";
 import { useRouter } from "expo-router";
+import { Picker } from "@react-native-picker/picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface Project {
   id: number;
@@ -40,6 +43,14 @@ const ProgressBar = ({ current, goal }) => {
   );
 };
 
+const categories = [
+  "Education",
+  "Healthcare",
+  "Technology",
+  "Environment",
+  "Finance",
+];
+
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +66,8 @@ export default function Home() {
     start_date: "",
     end_date: "",
   });
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const router = useRouter();
 
   const fetchProjects = async () => {
@@ -229,17 +242,20 @@ export default function Home() {
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerTextContainer}>
             <Text style={styles.headerTitle}>My Projects</Text>
             <Text style={styles.headerSubtitle}>Manage your crowdfunding campaigns</Text>
           </View>
           <TouchableOpacity
             style={styles.createButton}
             onPress={() => router.push("/users/entrepreneur/screens/projects")}
+            activeOpacity={0.7}
           >
-            <Text style={styles.createButtonText}>+ New Project</Text>
+            <Text style={styles.createButtonText}>+</Text>
           </TouchableOpacity>
         </View>
 
@@ -255,7 +271,12 @@ export default function Home() {
         ) : (
           <View style={styles.projectsGrid}>
             {projects.map((project) => (
-              <View key={project.id} style={styles.projectCard}>
+              <TouchableOpacity
+                key={project.id}
+                style={styles.projectCard}
+                activeOpacity={0.8}
+                onPress={() => handleEdit(project)}
+              >
                 <View style={styles.cardHeader}>
                   <View>
                     <Text style={styles.projectTitle}>{project.title}</Text>
@@ -309,18 +330,26 @@ export default function Home() {
                 <View style={styles.cardActions}>
                   <TouchableOpacity
                     style={styles.editButton}
-                    onPress={() => handleEdit(project)}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleEdit(project);
+                    }}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
                     <Text style={styles.editButtonText}>Edit</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteButton}
-                    onPress={() => handleDelete(project.id)}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      handleDelete(project.id);
+                    }}
+                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                   >
                     <Text style={styles.deleteButtonText}>Delete</Text>
                   </TouchableOpacity>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -334,68 +363,156 @@ export default function Home() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Edit Project</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Title"
-              value={editedProject.title}
-              onChangeText={(text) =>
-                setEditedProject({ ...editedProject, title: text })
-              }
-            />
-            <TextInput
-              style={[styles.modalInput, styles.textArea]}
-              placeholder="Description"
-              multiline
-              numberOfLines={4}
-              value={editedProject.description}
-              onChangeText={(text) =>
-                setEditedProject({ ...editedProject, description: text })
-              }
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Funding Goal"
-              keyboardType="numeric"
-              value={editedProject.funding_goal}
-              onChangeText={(text) =>
-                setEditedProject({ ...editedProject, funding_goal: text })
-              }
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Category"
-              value={editedProject.category}
-              onChangeText={(text) =>
-                setEditedProject({ ...editedProject, category: text })
-              }
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Start Date (YYYY-MM-DD)"
-              value={editedProject.start_date}
-              onChangeText={(text) =>
-                setEditedProject({ ...editedProject, start_date: text })
-              }
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="End Date (YYYY-MM-DD)"
-              value={editedProject.end_date}
-              onChangeText={(text) =>
-                setEditedProject({ ...editedProject, end_date: text })
-              }
-            />
-            <View style={styles.modalButtonContainer}>
-              <TouchableOpacity style={styles.saveButton} onPress={saveEdit}>
-                <Text style={styles.buttonText}>Save</Text>
-              </TouchableOpacity>
+          <View style={[
+            styles.modalContainer,
+            Platform.OS === 'ios' && styles.modalContainerIOS
+          ]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Project</Text>
               <TouchableOpacity
-                style={styles.cancelButton}
+                onPress={() => setModalVisible(false)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalScroll}>
+              <View style={styles.modalContent}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.modalLabel}>Title</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={editedProject.title}
+                    onChangeText={(text) =>
+                      setEditedProject({ ...editedProject, title: text })
+                    }
+                    placeholder="Project Title"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.modalLabel}>Description</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.textArea]}
+                    value={editedProject.description}
+                    onChangeText={(text) =>
+                      setEditedProject({ ...editedProject, description: text })
+                    }
+                    placeholder="Project Description"
+                    multiline
+                    numberOfLines={4}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.modalLabel}>Funding Goal (₱)</Text>
+                  <TextInput
+                    style={[styles.modalInput, styles.numberInput]}
+                    value={editedProject.funding_goal}
+                    onChangeText={(text) =>
+                      setEditedProject({ ...editedProject, funding_goal: text })
+                    }
+                    placeholder="0.00"
+                    keyboardType="numeric"
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.modalLabel}>Category</Text>
+                  <View style={styles.pickerContainer}>
+                    <Picker
+                      selectedValue={editedProject.category}
+                      onValueChange={(value) =>
+                        setEditedProject({ ...editedProject, category: value })
+                      }
+                      style={styles.picker}
+                      itemStyle={styles.pickerItem} // Add this for iOS
+                    >
+                      {categories.map((category) => (
+                        <Picker.Item
+                          key={category}
+                          label={category}
+                          value={category}
+                          color="#1A1A1A"
+                        />
+                      ))}
+                    </Picker>
+                  </View>
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.modalLabel}>Start Date</Text>
+                  <TouchableOpacity
+                    style={styles.dateButton}
+                    onPress={() => setShowStartDatePicker(true)}
+                  >
+                    <Text style={styles.dateButtonText}>
+                      {new Date(editedProject.start_date).toLocaleDateString()}
+                    </Text>
+                  </TouchableOpacity>
+                  {showStartDatePicker && (
+                    <DateTimePicker
+                      value={new Date(editedProject.start_date)}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={(event, date) => {
+                        setShowStartDatePicker(false);
+                        if (date) {
+                          setEditedProject({
+                            ...editedProject,
+                            start_date: date.toISOString().split('T')[0],
+                          });
+                        }
+                      }}
+                      minimumDate={new Date()}
+                    />
+                  )}
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.modalLabel}>End Date</Text>
+                  <TouchableOpacity
+                    style={styles.dateButton}
+                    onPress={() => setShowEndDatePicker(true)}
+                  >
+                    <Text style={styles.dateButtonText}>
+                      {new Date(editedProject.end_date).toLocaleDateString()}
+                    </Text>
+                  </TouchableOpacity>
+                  {showEndDatePicker && (
+                    <DateTimePicker
+                      value={new Date(editedProject.end_date)}
+                      mode="date"
+                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      onChange={(event, date) => {
+                        setShowEndDatePicker(false);
+                        if (date) {
+                          setEditedProject({
+                            ...editedProject,
+                            end_date: date.toISOString().split('T')[0],
+                          });
+                        }
+                      }}
+                      minimumDate={new Date(editedProject.start_date)}
+                    />
+                  )}
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.buttonText}>Cancel</Text>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.saveButton]}
+                onPress={saveEdit}
+              >
+                <Text style={styles.saveButtonText}>Save Changes</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -413,31 +530,62 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
+    alignItems: "flex-start",
+    padding: Platform.OS === 'ios' ? 20 : 16,
+    paddingTop: Platform.OS === 'ios' ? 60 : 20,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#EEEEEE',
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  headerTextContainer: {
+    flex: 1,
+    paddingRight: 16,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: "700",
+    fontSize: Platform.OS === 'ios' ? 34 : 28,
+    fontWeight: Platform.OS === 'ios' ? '600' : '700',
     color: "#1A1A1A",
     marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: 16,
+    fontSize: Platform.OS === 'ios' ? 17 : 16,
     color: "#666666",
   },
   createButton: {
     backgroundColor: "#4CAF50",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 8,
+    width: Platform.OS === 'ios' ? 36 : 40,
+    height: Platform.OS === 'ios' ? 36 : 40,
+    borderRadius: Platform.OS === 'ios' ? 18 : 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   createButtonText: {
     color: "#FFFFFF",
-    fontWeight: "600",
+    fontSize: Platform.OS === 'ios' ? 24 : 28,
+    fontWeight: "400",
+    lineHeight: Platform.OS === 'ios' ? 28 : 32,
   },
   emptyState: {
     flex: 1,
@@ -460,14 +608,20 @@ const styles = StyleSheet.create({
   },
   projectCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: Platform.OS === 'ios' ? 20 : 16,
+    padding: Platform.OS === 'ios' ? 24 : 20,
     marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   cardHeader: {
     flexDirection: "row",
@@ -533,25 +687,29 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     marginTop: 16,
     paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#EEEEEE",
+    borderTopWidth: Platform.OS === 'ios' ? StyleSheet.hairlineWidth : 1,
+    borderTopColor: Platform.OS === 'ios' ? '#C6C6C8' : '#EEEEEE',
   },
   editButton: {
-    backgroundColor: "#F0F0F0",
+    backgroundColor: Platform.OS === 'ios' ? '#E5E5EA' : '#F0F0F0',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+    borderRadius: Platform.OS === 'ios' ? 16 : 8,
     marginRight: 12,
+    minWidth: 80,
+    alignItems: 'center',
   },
   editButtonText: {
     color: "#1A1A1A",
     fontWeight: "600",
   },
   deleteButton: {
-    backgroundColor: "#FFEBEE",
+    backgroundColor: Platform.OS === 'ios' ? '#FFE5E5' : '#FFEBEE',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
+    borderRadius: Platform.OS === 'ios' ? 16 : 8,
+    minWidth: 80,
+    alignItems: 'center',
   },
   deleteButtonText: {
     color: "#C62828",
@@ -584,6 +742,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF",
     borderRadius: 10,
     padding: 20,
+  },
+  modalContainerIOS: {
+    borderRadius: 14,
+    padding: 24,
+    maxHeight: '80%',
   },
   modalTitle: {
     fontSize: 20,
@@ -621,11 +784,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   progressContainer: {
-    height: 24,
-    backgroundColor: '#F2F2F7',
-    borderRadius: 12,
-    marginVertical: 8,
-    overflow: 'hidden',
+    height: Platform.OS === 'ios' ? 28 : 24,
+    backgroundColor: Platform.OS === 'ios' ? '#E5E5EA' : '#F2F2F7',
+    borderRadius: Platform.OS === 'ios' ? 14 : 12,
+    marginVertical: Platform.OS === 'ios' ? 12 : 8,
   },
   progressBar: {
     position: 'absolute',
@@ -677,5 +839,116 @@ const styles = StyleSheet.create({
   metricLabel: {
     fontSize: 14,
     color: '#666666',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+  },
+  modalCloseText: {
+    fontSize: 20,
+    color: '#666666',
+    padding: 8,
+  },
+  modalScroll: {
+    maxHeight: Platform.OS === 'ios' ? '70%' : '80%',
+  },
+  modalContent: {
+    paddingVertical: 20,
+  },
+  modalLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginBottom: 8,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  pickerContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    overflow: 'hidden',
+    marginTop: 4,
+    ...Platform.select({
+      ios: {
+        paddingVertical: 8,
+      },
+      android: {
+        paddingHorizontal: 4,
+      },
+    }),
+  },
+  picker: {
+    height: Platform.OS === 'ios' ? 180 : 50,
+    width: '100%',
+    backgroundColor: 'transparent',
+  },
+  pickerItem: {
+    fontSize: 16,
+    height: 120,
+  },
+  dateButton: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: '#1A1A1A',
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    padding: Platform.OS === 'ios' ? 16 : 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Platform.select({
+      ios: {
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
+  },
+  cancelButton: {
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  saveButton: {
+    backgroundColor: '#4CAF50',
+  },
+  cancelButtonText: {
+    color: '#666666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  numberInput: {
+    textAlign: 'right',
   },
 });
