@@ -32,6 +32,23 @@ const ProjectDetail = () => {
   const [userBalance, setUserBalance] = useState(0);
   const router = useRouter();
 
+  const fetchBalance = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const response = await fetch("http://192.168.1.46:8081/user-balance", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (data.success) {
+        setUserBalance(data.balance);
+      }
+    } catch (error) {
+      console.error("Error fetching balance:", error);
+    }
+  };
+
   useEffect(() => {
     const fetchProject = async () => {
       try {
@@ -59,24 +76,6 @@ const ProjectDetail = () => {
     };
 
     fetchProject();
-
-    const fetchBalance = async () => {
-      try {
-        const token = await AsyncStorage.getItem("token");
-        const response = await fetch("http://192.168.1.46:8081/user-balance", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await response.json();
-        if (data.success) {
-          setUserBalance(data.balance);
-        }
-      } catch (error) {
-        console.error("Error fetching balance:", error);
-      }
-    };
-
     fetchBalance();
   }, [id]);
 
@@ -119,8 +118,7 @@ const ProjectDetail = () => {
           ]
         );
         setInvestAmount('');
-        // Refresh user balance
-        fetchBalance();
+        await fetchBalance();
       } else {
         Alert.alert("Error", data.message);
       }
