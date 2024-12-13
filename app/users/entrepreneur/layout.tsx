@@ -14,6 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { useRouter, usePathname } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SIDEBAR_FULL_WIDTH = Platform.OS === "web" ? 250 : 200;
 const SIDEBAR_COLLAPSED_WIDTH = Platform.OS === "web" ? 70 : 60;
@@ -32,22 +33,34 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
       "/users/entrepreneur/screens/messages": "Messages",
       "/users/entrepreneur/screens/notifications": "Notifications",
       "/users/entrepreneur/screens/profile": "Profile",
-      "/users/entrepreneur/screens/exit": "Exit",
     };
     return routes[path] || "Home";
   };
 
+  const handleLogout = async () => {
+    try {
+      await AsyncStorage.removeItem("user");
+      await AsyncStorage.removeItem("token");
+      router.push("/auth/login");
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
+
   const handleNavigation = (route: string) => {
-    const routes: { [key: string]: string } = {
-      Home: "/users/entrepreneur/screens/home",
-      Dashboard: "/users/entrepreneur/screens/dashboard",
-      Projects: "/users/entrepreneur/screens/projects",
-      Messages: "/users/entrepreneur/screens/messages",
-      Notifications: "/users/entrepreneur/screens/notifications",
-      Profile: "/users/entrepreneur/screens/profile",
-      Exit: "/users/entrepreneur/screens/exit",
-    };
-    router.push(routes[route]);
+    if (route === "Logout") {
+      handleLogout();
+    } else {
+      const routes: { [key: string]: string } = {
+        Home: "/users/entrepreneur/screens/home",
+        Dashboard: "/users/entrepreneur/screens/dashboard",
+        Projects: "/users/entrepreneur/screens/projects",
+        Messages: "/users/entrepreneur/screens/messages",
+        Notifications: "/users/entrepreneur/screens/notifications",
+        Profile: "/users/entrepreneur/screens/profile",
+      };
+      router.push(routes[route]);
+    }
   };
 
   const currentRoute = getRouteFromPathname(pathname);
@@ -260,24 +273,24 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
             <TouchableOpacity
               style={[
                 styles.navItem,
-                currentRoute === "Exit" && styles.activeNavItem,
+                currentRoute === "Logout" && styles.activeNavItem,
               ]}
-              onPress={() => handleNavigation("Exit")}
+              onPress={() => handleNavigation("Logout")}
             >
               <Ionicons
                 name="exit"
                 size={22}
-                color={currentRoute === "Exit" ? "#007AFF" : "#666"}
+                color={currentRoute === "Logout" ? "#007AFF" : "#666"}
               />
               {isOpen && (
                 <Animated.Text
                   style={[
                     styles.navText,
-                    currentRoute === "Exit" && styles.activeNavText,
+                    currentRoute === "Logout" && styles.activeNavText,
                   ]}
                   numberOfLines={1}
                 >
-                  Exit
+                  Logout
                 </Animated.Text>
               )}
             </TouchableOpacity>
