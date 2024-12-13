@@ -16,6 +16,10 @@ interface Investment {
   investment_date: string;
   investment_status: string;
   project_title?: string; // Added from JOIN with projects
+  expected_returns?: number;
+  investment_duration?: number;
+  risk_level?: 'Low' | 'Medium' | 'High';
+  returns_earned?: number;
 }
 
 const Investments = () => {
@@ -53,19 +57,86 @@ const Investments = () => {
     fetchInvestments();
   };
 
+  const calculateTotalMetrics = () => {
+    const total = investments.reduce(
+      (acc, inv) => ({
+        totalInvested: acc.totalInvested + inv.investment_amount,
+        totalReturns: acc.totalReturns + (inv.returns_earned || 0),
+        activeInvestments: acc.activeInvestments + (inv.investment_status === 'active' ? 1 : 0),
+      }),
+      { totalInvested: 0, totalReturns: 0, activeInvestments: 0 }
+    );
+    return total;
+  };
+
+  const renderMetricsCard = () => {
+    const metrics = calculateTotalMetrics();
+    return (
+      <View style={styles.metricsContainer}>
+        <View style={styles.metricCard}>
+          <Text style={styles.metricValue}>₱{metrics.totalInvested.toLocaleString()}</Text>
+          <Text style={styles.metricLabel}>Total Invested</Text>
+        </View>
+        <View style={styles.metricCard}>
+          <Text style={styles.metricValue}>₱{metrics.totalReturns.toLocaleString()}</Text>
+          <Text style={styles.metricLabel}>Total Returns</Text>
+        </View>
+        <View style={styles.metricCard}>
+          <Text style={styles.metricValue}>{metrics.activeInvestments}</Text>
+          <Text style={styles.metricLabel}>Active Investments</Text>
+        </View>
+      </View>
+    );
+  };
+
   const renderInvestment = ({ item }: { item: Investment }) => (
     <View style={styles.card}>
-      <Text style={styles.projectTitle}>{item.project_title}</Text>
-      <Text style={styles.amount}>Amount: ₱{item.investment_amount}</Text>
-      <Text style={styles.date}>
-        Date: {new Date(item.investment_date).toLocaleDateString()}
-      </Text>
-      <View style={styles.statusContainer}>
-        <Text style={[
-          styles.status,
-          { color: item.investment_status === 'active' ? '#4CAF50' : '#FF9800' }
+      <View style={styles.cardHeader}>
+        <Text style={styles.projectTitle}>{item.project_title}</Text>
+        <View style={[
+          styles.statusBadge,
+          { backgroundColor: item.investment_status === 'active' ? '#E7F5E8' : '#FFF3E0' }
         ]}>
-          {item.investment_status.toUpperCase()}
+          <Text style={[
+            styles.status,
+            { color: item.investment_status === 'active' ? '#4CAF50' : '#FF9800' }
+          ]}>
+            {item.investment_status.toUpperCase()}
+          </Text>
+        </View>
+      </View>
+      
+      <View style={styles.cardContent}>
+        <View style={styles.infoRow}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Investment Amount</Text>
+            <Text style={styles.infoValue}>₱{item.investment_amount.toLocaleString()}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Expected Returns</Text>
+            <Text style={styles.infoValue}>₱{(item.expected_returns || 0).toLocaleString()}</Text>
+          </View>
+        </View>
+
+        <View style={styles.infoRow}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Duration</Text>
+            <Text style={styles.infoValue}>{item.investment_duration || 'N/A'} months</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Risk Level</Text>
+            <Text style={[
+              styles.riskLevel,
+              { color: item.risk_level === 'High' ? '#FF5252' : 
+                       item.risk_level === 'Medium' ? '#FFC107' : '#4CAF50' }
+            ]}>
+              {item.risk_level || 'N/A'}
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.date}>
+          Invested on: {new Date(item.investment_date).toLocaleDateString()}
         </Text>
       </View>
     </View>
@@ -82,6 +153,7 @@ const Investments = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>My Investments</Text>
+      {renderMetricsCard()}
       <FlatList
         data={investments}
         renderItem={renderInvestment}
@@ -92,6 +164,7 @@ const Investments = () => {
         ListEmptyComponent={
           <Text style={styles.emptyText}>No investments found</Text>
         }
+        contentContainerStyle={styles.listContainer}
       />
     </View>
   );
@@ -109,17 +182,89 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     color: '#333333',
   },
-  card: {
-    backgroundColor: '#F2F2F7',
-    padding: 16,
+  metricsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    paddingHorizontal: 8,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+    padding: 12,
     borderRadius: 8,
+    marginHorizontal: 4,
+    alignItems: 'center',
+  },
+  metricValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginBottom: 4,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: '#666666',
+  },
+  listContainer: {
+    paddingBottom: 16,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F0F0F0',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  cardContent: {
+    padding: 16,
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 12,
+  },
+  infoItem: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 12,
+    color: '#666666',
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333333',
+  },
+  riskLevel: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   projectTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333333',
-    marginBottom: 8,
+    flex: 1,
+    marginRight: 8,
   },
   amount: {
     fontSize: 16,
