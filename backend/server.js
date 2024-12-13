@@ -562,8 +562,16 @@ app.get("/dashboard-data/:userId", authenticateToken, async (req, res) => {
   const userId = req.params.userId;
 
   try {
-    // Get all projects for the user
-    const projectsQuery = "SELECT * FROM projects WHERE user_id = ?";
+    // Get projects with funding details
+    const projectsQuery = `
+      SELECT 
+        p.*,
+        COALESCE(SUM(i.investment_amount), 0) as current_funding,
+        COUNT(DISTINCT i.investor_id) as investor_count
+      FROM projects p
+      LEFT JOIN investments i ON p.id = i.project_id
+      WHERE p.user_id = ?
+      GROUP BY p.id`;
     
     db.query(projectsQuery, [userId], (err, projects) => {
       if (err) {
@@ -574,18 +582,31 @@ app.get("/dashboard-data/:userId", authenticateToken, async (req, res) => {
         });
       }
 
-      // Calculate metrics
+      // Calculate enhanced metrics
       const metrics = {
         totalProjects: projects.length,
         activeProjects: projects.filter(p => new Date(p.end_date) >= new Date()).length,
-        fundedProjects: 0, // You'll need to add a funding status to your projects table
-        totalFunding: 0, // You'll need to add a received_funding field to your projects table
+        completedProjects: projects.filter(p => new Date(p.end_date) < new Date()).length,
+        totalFunding: projects.reduce((sum, p) => sum + parseFloat(p.current_funding), 0),
+        totalInvestors: new Set(projects.flatMap(p => p.investor_count)).size,
+        averageFunding: projects.length ? 
+          (projects.reduce((sum, p) => sum + parseFloat(p.current_funding), 0) / projects.length) : 0,
+        fundingProgress: projects.map(p => ({
+          projectId: p.id,
+          title: p.title,
+          progress: (p.current_funding / p.funding_goal) * 100
+        }))
       };
 
-      // Get recent projects (last 5)
+      // Get recent projects with more details
       const recentProjects = projects
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-        .slice(0, 5);
+        .slice(0, 5)
+        .map(p => ({
+          ...p,
+          fundingProgress: (p.current_funding / p.funding_goal) * 100,
+          daysLeft: Math.max(0, Math.ceil((new Date(p.end_date) - new Date()) / (1000 * 60 * 60 * 24)))
+        }));
 
       res.status(200).json({
         success: true,

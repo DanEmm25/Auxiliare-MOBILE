@@ -18,16 +18,27 @@ interface DashboardData {
   metrics: {
     totalProjects: number;
     activeProjects: number;
-    fundedProjects: number;
+    completedProjects: number;
     totalFunding: number;
+    totalInvestors: number;
+    averageFunding: number;
+    fundingProgress: Array<{
+      projectId: number;
+      title: string;
+      progress: number;
+    }>;
   };
   recentProjects: Array<{
     id: number;
     title: string;
     category: string;
     funding_goal: number;
+    current_funding: number;
+    fundingProgress: number;
+    daysLeft: number;
     start_date: string;
     end_date: string;
+    investor_count: number;
   }>;
 }
 
@@ -45,6 +56,33 @@ const SectionHeader = ({ title, actionText }) => (
     <TouchableOpacity>
       <Text style={styles.sectionAction}>{actionText}</Text>
     </TouchableOpacity>
+  </View>
+);
+
+const ProjectCard = ({ project }) => (
+  <View style={styles.projectCard}>
+    <Text style={styles.projectName}>{project.title}</Text>
+    <Text style={styles.projectCategory}>{project.category}</Text>
+    
+    <View style={styles.progressContainer}>
+      <View style={[styles.progressBar, { width: `${project.fundingProgress}%` }]} />
+    </View>
+    
+    <View style={styles.projectStats}>
+      <Text style={styles.statValue}>₱{project.current_funding.toLocaleString()}</Text>
+      <Text style={styles.statLabel}>of ₱{project.funding_goal.toLocaleString()}</Text>
+    </View>
+    
+    <View style={styles.projectFooter}>
+      <View style={styles.footerStat}>
+        <Ionicons name="people-outline" size={16} color="#666" />
+        <Text style={styles.footerText}>{project.investor_count} investors</Text>
+      </View>
+      <View style={styles.footerStat}>
+        <Ionicons name="time-outline" size={16} color="#666" />
+        <Text style={styles.footerText}>{project.daysLeft} days left</Text>
+      </View>
+    </View>
   </View>
 );
 
@@ -135,30 +173,31 @@ export default function EntrepreneurDashboard() {
             icon="rocket"
           />
           <MetricCard
-            title="Funded Projects"
-            value={dashboardData?.metrics.fundedProjects || 0}
+            title="Total Funding"
+            value={`₱${(dashboardData?.metrics.totalFunding || 0).toLocaleString()}`}
             icon="cash"
           />
           <MetricCard
-            title="Total Funding"
-            value={`₱${(dashboardData?.metrics.totalFunding || 0).toLocaleString()}`}
-            icon="trending-up"
+            title="Total Investors"
+            value={dashboardData?.metrics.totalInvestors || 0}
+            icon="people"
           />
         </View>
 
-        <SectionHeader title="Recent Projects" actionText="View All" />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={styles.fundingOverview}>
+          <Text style={styles.sectionTitle}>Funding Overview</Text>
+          <View style={styles.overviewCard}>
+            <Text style={styles.overviewLabel}>Average Funding per Project</Text>
+            <Text style={styles.overviewValue}>
+              ₱{(dashboardData?.metrics.averageFunding || 0).toLocaleString()}
+            </Text>
+          </View>
+        </View>
+
+        <SectionHeader title="Active Projects" actionText="View All" />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.projectsScroll}>
           {dashboardData?.recentProjects.map((project) => (
-            <View key={project.id} style={styles.projectCard}>
-              <Text style={styles.projectName}>{project.title}</Text>
-              <Text style={styles.projectCategory}>{project.category}</Text>
-              <Text style={styles.projectFunding}>
-                Goal: ₱{project.funding_goal.toLocaleString()}
-              </Text>
-              <Text style={styles.projectDates}>
-                {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
-              </Text>
-            </View>
+            <ProjectCard key={project.id} project={project} />
           ))}
         </ScrollView>
       </ScrollView>
@@ -341,5 +380,78 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#999",
     marginTop: 4,
+  },
+  progressContainer: {
+    height: 4,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 2,
+    marginVertical: 8,
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#007AFF',
+    borderRadius: 2,
+  },
+  projectStats: {
+    marginTop: 8,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  projectFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  footerStat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#666',
+    marginLeft: 4,
+  },
+  fundingOverview: {
+    padding: 20,
+  },
+  overviewCard: {
+    backgroundColor: '#fff',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 3,
+      },
+    }),
+  },
+  overviewLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  overviewValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginTop: 4,
+  },
+  projectsScroll: {
+    paddingHorizontal: 20,
   },
 });
