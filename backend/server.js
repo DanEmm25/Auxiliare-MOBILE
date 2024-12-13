@@ -956,6 +956,94 @@ app.get("/portfolio", authenticateToken, (req, res) => {
   });
 });
 
+// Endpoint to initiate password reset
+app.post("/request-password-reset", async (req, res) => {
+  const { email } = req.body;
+
+  console.log("Received password reset request for email:", email);
+
+  const sql = "SELECT * FROM users WHERE email = ?";
+  db.query(sql, [email], async (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Error checking email"
+      });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No account found with this email"
+      });
+    }
+
+    // Generate reset token
+    const resetToken = Math.random().toString(36).slice(-8);
+    const tokenExpiry = new Date(Date.now() + 3600000); // 1 hour validity
+
+    // Store reset token in database
+    const updateSql = "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?";
+    db.query(updateSql, [resetToken, tokenExpiry, email], (updateErr) => {
+      if (updateErr) {
+        console.error("Error updating reset token:", updateErr);
+        return res.status(500).json({
+          success: false,
+          message: "Error generating reset token"
+        });
+      }
+
+      // In a production environment, you would send this token via email
+      // For testing purposes, we'll return it in the response
+      res.status(200).json({
+        success: true,
+        message: "Reset token generated successfully",
+        resetToken: resetToken // Remove this in production, should be sent via email
+      });
+    });
+  });
+});
+
+// Endpoint to reset password
+app.post("/reset-password", async (req, res) => {
+  const { email, resetToken, newPassword } = req.body;
+
+  const sql = "SELECT * FROM users WHERE email = ? AND reset_token = ? AND reset_token_expiry > NOW()";
+  db.query(sql, [email, resetToken], async (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset token"
+      });
+    }
+
+    try {
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const updateSql = "UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE email = ?";
+      
+      db.query(updateSql, [hashedPassword, email], (err) => {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            message: "Error updating password"
+          });
+        }
+
+        res.status(200).json({
+          success: true,
+          message: "Password updated successfully"
+        });
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Error hashing new password"
+      });
+    }
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

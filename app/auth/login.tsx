@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
 import {
@@ -15,7 +16,7 @@ import {
   EyeOffIcon,
   LockIcon,
   UserIcon,
-  UsersIcon,
+  XIcon,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -26,6 +27,13 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  const [isResetModalVisible, setIsResetModalVisible] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetToken, setResetToken] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [resetStep, setResetStep] = useState(1); // 1: email, 2: token+password
+  const [resetLoading, setResetLoading] = useState(false);
 
   const handleLogin = async () => {
     setIsLoading(true);
@@ -77,6 +85,79 @@ export default function Login() {
     }
   };
 
+  const handleRequestReset = async () => {
+    if (!resetEmail.trim()) {
+      alert("Please enter your email address");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      console.log("Requesting password reset for:", resetEmail);
+      
+      const response = await fetch("http://192.168.1.46:8081/request-password-reset", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: resetEmail.trim() }),
+      });
+
+      const data = await response.json();
+      console.log("Reset response:", data);
+
+      if (data.success) {
+        alert(`Reset token: ${data.resetToken}`); // Remove in production, should come via email
+        setResetStep(2);
+      } else {
+        alert(data.message || "Failed to request password reset");
+      }
+    } catch (error) {
+      console.error("Password reset error:", error);
+      alert("Error requesting password reset. Please try again.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!resetToken.trim() || !newPassword.trim()) {
+      alert("Please fill in all fields");
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      const response = await fetch("http://192.168.1.46:8081/reset-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: resetEmail,
+          resetToken,
+          newPassword,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert("Password reset successful");
+        setIsResetModalVisible(false);
+        setResetStep(1);
+        setResetEmail("");
+        setResetToken("");
+        setNewPassword("");
+      } else {
+        alert(data.message);
+      }
+    } catch (error) {
+      alert("Error resetting password");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Header />
@@ -114,7 +195,7 @@ export default function Login() {
               </TouchableOpacity>
             </View>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => setIsResetModalVisible(true)}>
             <Text style={styles.forgotPassword}>Forgot Password?</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -138,6 +219,93 @@ export default function Login() {
         </View>
         <Footer />
       </ScrollView>
+      <Modal
+        visible={isResetModalVisible}
+        transparent
+        animationType="slide"
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => {
+                setIsResetModalVisible(false);
+                setResetStep(1);
+                setResetEmail("");
+                setResetToken("");
+                setNewPassword("");
+              }}
+            >
+              <XIcon color="#000" />
+            </TouchableOpacity>
+
+            <Text style={styles.modalTitle}>
+              {resetStep === 1 ? "Reset Password" : "Enter Reset Details"}
+            </Text>
+
+            {resetStep === 1 ? (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Email Address</Text>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter your email"
+                      value={resetEmail}
+                      onChangeText={setResetEmail}
+                      keyboardType="email-address"
+                    />
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.button, resetLoading && styles.buttonDisabled]}
+                  onPress={handleRequestReset}
+                  disabled={resetLoading}
+                >
+                  <Text style={styles.buttonText}>
+                    {resetLoading ? "Requesting..." : "Request Reset"}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Reset Token</Text>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter reset token"
+                      value={resetToken}
+                      onChangeText={setResetToken}
+                    />
+                  </View>
+                </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>New Password</Text>
+                  <View style={styles.inputWrapper}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter new password"
+                      secureTextEntry
+                      value={newPassword}
+                      onChangeText={setNewPassword}
+                    />
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.button, resetLoading && styles.buttonDisabled]}
+                  onPress={handleResetPassword}
+                  disabled={resetLoading}
+                >
+                  <Text style={styles.buttonText}>
+                    {resetLoading ? "Resetting..." : "Reset Password"}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -224,5 +392,40 @@ const styles = StyleSheet.create({
   link: {
     color: "#1E90FF",
     textDecorationLine: "none",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+    padding: 10,
+    zIndex: 1,
   },
 });
