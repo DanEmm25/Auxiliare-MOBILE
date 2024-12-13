@@ -589,6 +589,65 @@ app.get("/dashboard-data/:userId", authenticateToken, async (req, res) => {
   }
 });
 
+// Get user balance
+app.get("/user-balance", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const sql = "SELECT balance FROM users WHERE user_id = ?";
+  
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching balance"
+      });
+    }
+    res.status(200).json({
+      success: true,
+      balance: results[0]?.balance || 0
+    });
+  });
+});
+
+// Deposit funds
+app.post("/deposit", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+  const { amount } = req.body;
+
+  if (!amount || amount <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid amount"
+    });
+  }
+
+  const sql = "UPDATE users SET balance = balance + ? WHERE user_id = ?";
+  
+  db.query(sql, [amount, userId], (err, result) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Error processing deposit"
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: "Deposit successful"
+    });
+  });
+});
+
+// Get transaction history (simple version)
+app.get("/transaction-history", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  // You'll need to create a transactions table for this
+  // For now, returning mock data
+  res.status(200).json({
+    success: true,
+    transactions: []
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
