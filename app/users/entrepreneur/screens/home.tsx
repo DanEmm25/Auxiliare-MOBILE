@@ -201,12 +201,15 @@ export default function Home() {
         }
       >
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>My Projects</Text>
+          <View>
+            <Text style={styles.headerTitle}>My Projects</Text>
+            <Text style={styles.headerSubtitle}>Manage your crowdfunding campaigns</Text>
+          </View>
           <TouchableOpacity
             style={styles.createButton}
             onPress={() => router.push("/users/entrepreneur/screens/projects")}
           >
-            <Text style={styles.createButtonText}>Create Project</Text>
+            <Text style={styles.createButtonText}>+ New Project</Text>
           </TouchableOpacity>
         </View>
 
@@ -215,43 +218,65 @@ export default function Home() {
             <Text style={styles.errorText}>{error}</Text>
           </View>
         ) : projects.length === 0 ? (
-          <View style={styles.centerContainer}>
-            <Text style={styles.noProjectsText}>No projects found</Text>
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>No projects yet</Text>
+            <Text style={styles.emptyStateSubtext}>Start by creating your first project</Text>
           </View>
         ) : (
           <View style={styles.projectsGrid}>
             {projects.map((project) => (
               <View key={project.id} style={styles.projectCard}>
-                <Text style={styles.projectTitle}>{project.title}</Text>
+                <View style={styles.cardHeader}>
+                  <View>
+                    <Text style={styles.projectTitle}>{project.title}</Text>
+                    <View style={styles.categoryChip}>
+                      <Text style={styles.categoryText}>{project.category}</Text>
+                    </View>
+                  </View>
+                  <View style={[
+                    styles.statusBadge,
+                    { backgroundColor: new Date(project.end_date) >= new Date() ? '#E8F5E9' : '#FFEBEE' }
+                  ]}>
+                    <Text style={[
+                      styles.statusText,
+                      { color: new Date(project.end_date) >= new Date() ? '#2E7D32' : '#C62828' }
+                    ]}>
+                      {new Date(project.end_date) >= new Date() ? 'ACTIVE' : 'ENDED'}
+                    </Text>
+                  </View>
+                </View>
+
                 <Text style={styles.projectDescription} numberOfLines={2}>
                   {project.description}
                 </Text>
-                <View style={styles.projectDetails}>
-                  <Text style={styles.detailText}>
-                    Goal: {formatCurrency(project.funding_goal)}
-                  </Text>
-                  <Text style={styles.detailText}>
-                    Category: {project.category}
-                  </Text>
-                  <Text style={styles.detailText}>
-                    Start: {formatDate(project.start_date)}
-                  </Text>
-                  <Text style={styles.detailText}>
-                    End: {formatDate(project.end_date)}
-                  </Text>
+
+                <View style={styles.projectMetrics}>
+                  <View style={styles.metricItem}>
+                    <Text style={styles.metricValue}>
+                      {formatCurrency(project.funding_goal)}
+                    </Text>
+                    <Text style={styles.metricLabel}>Funding Goal</Text>
+                  </View>
+                  <View style={styles.metricItem}>
+                    <Text style={styles.metricValue}>
+                      {Math.max(0, Math.ceil((new Date(project.end_date) - new Date()) / (1000 * 60 * 60 * 24)))}
+                    </Text>
+                    <Text style={styles.metricLabel}>Days Left</Text>
+                  </View>
                 </View>
-                <View style={styles.buttonContainer}>
+
+                <View style={styles.cardActions}>
                   <TouchableOpacity
                     style={styles.editButton}
                     onPress={() => handleEdit(project)}
                   >
-                    <Text style={styles.buttonText}>Edit</Text>
+                    <Text style={styles.editButtonText}>Edit</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => handleDelete(project.id)}
                   >
-                    <Text style={styles.buttonText}>Delete</Text>
+                    <Text style={styles.deleteButtonText}>Delete</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -349,21 +374,146 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     padding: 20,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: "#E9ECEF",
+    borderBottomColor: '#EEEEEE',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "700",
+    color: "#1A1A1A",
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: "#666666",
   },
   createButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  createButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+  },
+  emptyStateText: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#1A1A1A",
+    marginBottom: 8,
+  },
+  emptyStateSubtext: {
+    fontSize: 16,
+    color: "#666666",
+  },
+  projectsGrid: {
+    padding: 16,
+  },
+  projectCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  projectTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    marginBottom: 8,
+  },
+  categoryChip: {
+    backgroundColor: "#F0F0F0",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    alignSelf: "flex-start",
+  },
+  categoryText: {
+    fontSize: 14,
+    color: "#666666",
+    textTransform: "uppercase",
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  projectDescription: {
+    fontSize: 16,
+    color: "#4A4A4A",
+    lineHeight: 24,
+    marginBottom: 16,
+  },
+  projectMetrics: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#EEEEEE",
+  },
+  metricItem: {
+    alignItems: "center",
+  },
+  metricValue: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1A1A1A",
+    marginBottom: 4,
+  },
+  metricLabel: {
+    fontSize: 14,
+    color: "#666666",
+  },
+  cardActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: "#EEEEEE",
+  },
+  editButton: {
+    backgroundColor: "#F0F0F0",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginRight: 12,
+  },
+  editButtonText: {
+    color: "#1A1A1A",
+    fontWeight: "600",
+  },
+  deleteButton: {
+    backgroundColor: "#FFEBEE",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
-  createButtonText: {
-    color: "#FFF",
+  deleteButtonText: {
+    color: "#C62828",
     fontWeight: "600",
   },
   centerContainer: {
@@ -381,60 +531,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
     textAlign: "center",
-  },
-  projectsGrid: {
-    padding: 16,
-  },
-  projectCard: {
-    backgroundColor: "#FFF",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  projectTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  projectDescription: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 12,
-  },
-  projectDetails: {
-    borderTopWidth: 1,
-    borderTopColor: "#E9ECEF",
-    paddingTop: 12,
-  },
-  detailText: {
-    fontSize: 14,
-    color: "#495057",
-    marginBottom: 4,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    marginTop: 10,
-  },
-  editButton: {
-    backgroundColor: "#FFA500",
-    padding: 8,
-    borderRadius: 5,
-    marginRight: 10,
-  },
-  deleteButton: {
-    backgroundColor: "#FF4500",
-    padding: 8,
-    borderRadius: 5,
-  },
-  buttonText: {
-    color: "#FFF",
-    fontSize: 14,
   },
   modalOverlay: {
     flex: 1,

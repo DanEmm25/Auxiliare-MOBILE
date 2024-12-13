@@ -123,9 +123,10 @@ export default function Projects() {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Create New Project</Text>
+          <Text style={styles.headerSubtitle}>Launch your next big idea</Text>
         </View>
 
-        <View style={styles.form}>
+        <View style={styles.card}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Project Title</Text>
             <TextInput
@@ -134,7 +135,8 @@ export default function Projects() {
               onChangeText={(text) =>
                 setProjectData({ ...projectData, title: text })
               }
-              placeholder="Enter project title"
+              placeholder="Enter a compelling title for your project"
+              placeholderTextColor="#999"
             />
           </View>
 
@@ -146,102 +148,110 @@ export default function Projects() {
               onChangeText={(text) =>
                 setProjectData({ ...projectData, description: text })
               }
-              placeholder="Describe your project"
+              placeholder="Describe your project in detail"
+              placeholderTextColor="#999"
               multiline
               numberOfLines={4}
             />
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Funding Goal (₱)</Text>
-            <TextInput
-              style={styles.input}
-              value={projectData.fundingGoal}
-              onChangeText={(text) =>
-                setProjectData({ ...projectData, fundingGoal: text })
-              }
-              placeholder="Enter amount"
-              keyboardType="numeric"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Category</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={projectData.category}
-                onValueChange={(value) =>
-                  setProjectData({ ...projectData, category: value })
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+              <Text style={styles.label}>Funding Goal (₱)</Text>
+              <TextInput
+                style={[styles.input, styles.numberInput]}
+                value={projectData.fundingGoal}
+                onChangeText={(text) =>
+                  setProjectData({ ...projectData, fundingGoal: text })
                 }
-                style={styles.picker}
-              >
-                {categories.map((category) => (
-                  <Picker.Item
-                    key={category}
-                    label={category}
-                    value={category}
-                  />
-                ))}
-              </Picker>
+                placeholder="0.00"
+                placeholderTextColor="#999"
+                keyboardType="numeric"
+              />
+            </View>
+
+            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+              <Text style={styles.label}>Category</Text>
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={projectData.category}
+                  onValueChange={(value) =>
+                    setProjectData({ ...projectData, category: value })
+                  }
+                  style={styles.picker}
+                >
+                  {categories.map((category) => (
+                    <Picker.Item
+                      key={category}
+                      label={category}
+                      value={category}
+                    />
+                  ))}
+                </Picker>
+              </View>
             </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Start Date</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowStartDate(true)}
-            >
-              <Text>
-                {projectData.startDate
-                  ? projectData.startDate.toLocaleDateString()
-                  : "Select Start Date"}
-              </Text>
-            </TouchableOpacity>
-            {showStartDate && (
-              <DateTimePicker
-                value={projectData.startDate}
-                mode="date"
-                display="default"
-                onChange={(event, date) => {
-                  setShowStartDate(false);
-                  if (date) {
-                    setProjectData({ ...projectData, startDate: date });
-                  }
-                }}
-              />
-            )}
-          </View>
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+              <Text style={styles.label}>Start Date</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowStartDate(true)}
+              >
+                <Text style={styles.dateButtonText}>
+                  {projectData.startDate
+                    ? projectData.startDate.toLocaleDateString()
+                    : "Select Date"}
+                </Text>
+              </TouchableOpacity>
+              {showStartDate && (
+                <DateTimePicker
+                  value={projectData.startDate}
+                  mode="date"
+                  display="default"
+                  onChange={(event, date) => {
+                    setShowStartDate(false);
+                    if (date) {
+                      setProjectData({ ...projectData, startDate: date });
+                    }
+                  }}
+                  minimumDate={new Date()}
+                />
+              )}
+            </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>End Date</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowEndDate(true)}
-            >
-              <Text>
-                {projectData.endDate
-                  ? projectData.endDate.toLocaleDateString()
-                  : "Select End Date"}
-              </Text>
-            </TouchableOpacity>
-            {showEndDate && (
-              <DateTimePicker
-                value={projectData.endDate}
-                mode="date"
-                display="default"
-                onChange={(event, date) => {
-                  setShowEndDate(false);
-                  if (date) {
-                    setProjectData({ ...projectData, endDate: date });
-                  }
-                }}
-              />
-            )}
+            <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+              <Text style={styles.label}>End Date</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowEndDate(true)}
+              >
+                <Text style={styles.dateButtonText}>
+                  {projectData.endDate
+                    ? projectData.endDate.toLocaleDateString()
+                    : "Select Date"}
+                </Text>
+              </TouchableOpacity>
+              {showEndDate && (
+                <DateTimePicker
+                  value={projectData.endDate}
+                  mode="date"
+                  display="default"
+                  onChange={(event, date) => {
+                    setShowEndDate(false);
+                    if (date) {
+                      setProjectData({ ...projectData, endDate: date });
+                    }
+                  }}
+                  minimumDate={projectData.startDate}
+                />
+              )}
+            </View>
           </View>
 
           <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Create Project</Text>
+            <Text style={styles.submitButtonText}>Launch Project</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -256,15 +266,34 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: "#E9ECEF",
+    borderBottomColor: '#EEEEEE',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "700",
+    color: "#1A1A1A",
+    marginBottom: 8,
   },
-  form: {
+  headerSubtitle: {
+    fontSize: 16,
+    color: "#666666",
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    margin: 16,
     padding: 20,
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  row: {
+    flexDirection: 'row',
+    marginHorizontal: -8,
   },
   inputGroup: {
     marginBottom: 20,
@@ -273,44 +302,53 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginBottom: 8,
-    color: "#1a1a1a",
+    color: "#1A1A1A",
   },
   input: {
-    backgroundColor: "#FFF",
-    padding: 12,
+    backgroundColor: "#FFFFFF",
+    padding: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E9ECEF",
+    borderColor: "#E0E0E0",
+    fontSize: 16,
   },
   textArea: {
-    height: 100,
+    height: 120,
     textAlignVertical: "top",
   },
+  numberInput: {
+    textAlign: 'right',
+  },
   pickerContainer: {
-    backgroundColor: "#FFF",
+    backgroundColor: "#FFFFFF",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E9ECEF",
+    borderColor: "#E0E0E0",
+    overflow: 'hidden',
   },
   picker: {
     height: 50,
   },
   dateButton: {
-    backgroundColor: "#FFF",
-    padding: 12,
+    backgroundColor: "#FFFFFF",
+    padding: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#E9ECEF",
+    borderColor: "#E0E0E0",
+  },
+  dateButtonText: {
+    fontSize: 16,
+    color: "#1A1A1A",
   },
   submitButton: {
-    backgroundColor: "#007AFF",
+    backgroundColor: "#4CAF50",
     padding: 16,
     borderRadius: 8,
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 12,
   },
   submitButtonText: {
-    color: "#FFF",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
   },
