@@ -10,6 +10,18 @@ import {
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+const ProgressBar = ({ current, goal }) => {
+  const progress = Math.min((current / goal) * 100, 100);
+  return (
+    <View style={styles.progressContainer}>
+      <View style={[styles.progressBar, { width: `${progress}%` }]} />
+      <Text style={styles.progressText}>
+        ₱{current.toLocaleString()} of ₱{goal.toLocaleString()} ({progress.toFixed(1)}%)
+      </Text>
+    </View>
+  );
+};
+
 const Home = () => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -53,6 +65,10 @@ const Home = () => {
         {item.description}
       </Text>
       <Text style={styles.category}>{item.category}</Text>
+      <ProgressBar current={item.current_funding} goal={item.funding_goal} />
+      <Text style={styles.investors}>
+        {item.total_investors} investor{item.total_investors !== 1 ? 's' : ''}
+      </Text>
     </TouchableOpacity>
   );
 
@@ -110,6 +126,35 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  progressContainer: {
+    height: 24,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 12,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+  },
+  progressText: {
+    position: 'absolute',
+    width: '100%',
+    textAlign: 'center',
+    lineHeight: 24,
+    fontSize: 12,
+    color: '#333333',
+    fontWeight: '600',
+  },
+  investors: {
+    fontSize: 12,
+    color: '#666666',
+    marginTop: 4,
   },
 });
 

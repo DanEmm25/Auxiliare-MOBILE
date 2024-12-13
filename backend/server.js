@@ -342,7 +342,13 @@ app.get("/user-projects/:userId", authenticateToken, (req, res) => {
 
 // Endpoint to fetch all projects
 app.get("/projects", authenticateToken, (req, res) => {
-  const sql = "SELECT * FROM projects";
+  const sql = `
+    SELECT p.*, 
+           COALESCE(SUM(i.investment_amount), 0) as current_funding,
+           COALESCE(COUNT(DISTINCT i.investor_id), 0) as total_investors
+    FROM projects p
+    LEFT JOIN investments i ON p.id = i.project_id
+    GROUP BY p.id`;
 
   db.query(sql, (err, results) => {
     if (err) {
@@ -363,7 +369,14 @@ app.get("/projects", authenticateToken, (req, res) => {
 // Endpoint to fetch a single project by ID
 app.get("/projects/:id", authenticateToken, (req, res) => {
   const projectId = req.params.id;
-  const sql = "SELECT * FROM projects WHERE id = ?";
+  const sql = `
+    SELECT p.*, 
+           COALESCE(SUM(i.investment_amount), 0) as current_funding,
+           COALESCE(COUNT(DISTINCT i.investor_id), 0) as total_investors
+    FROM projects p
+    LEFT JOIN investments i ON p.id = i.project_id
+    WHERE p.id = ?
+    GROUP BY p.id`;
 
   db.query(sql, [projectId], (err, results) => {
     if (err) {

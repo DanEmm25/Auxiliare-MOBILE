@@ -11,6 +11,18 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+const ProgressBar = ({ current, goal }) => {
+  const progress = Math.min((current / goal) * 100, 100);
+  return (
+    <View style={styles.progressContainer}>
+      <View style={[styles.progressBar, { width: `${progress}%` }]} />
+      <Text style={styles.progressText}>
+        ₱{current.toLocaleString()} of ₱{goal.toLocaleString()} ({progress.toFixed(1)}%)
+      </Text>
+    </View>
+  );
+};
+
 const ProjectDetail = () => {
   const { id } = useLocalSearchParams();
   const [project, setProject] = useState(null);
@@ -138,9 +150,18 @@ const ProjectDetail = () => {
       <Text style={styles.title}>{project.title}</Text>
       <Text style={styles.description}>{project.description}</Text>
       <Text style={styles.category}>Category: {project.category}</Text>
-      <Text style={styles.fundingGoal}>
-        Funding Goal: ₱{project.funding_goal}
-      </Text>
+      
+      <View style={styles.fundingSection}>
+        <Text style={styles.fundingGoal}>Funding Progress:</Text>
+        <ProgressBar 
+          current={project.current_funding} 
+          goal={project.funding_goal} 
+        />
+        <Text style={styles.investorCount}>
+          {project.total_investors} investor{project.total_investors !== 1 ? 's' : ''}
+        </Text>
+      </View>
+
       <Text style={styles.dates}>
         Start Date: {new Date(project.start_date).toLocaleDateString()}
       </Text>
@@ -233,6 +254,41 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     marginBottom: 16,
+  },
+  progressContainer: {
+    height: 24,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 12,
+    marginVertical: 8,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+  },
+  progressText: {
+    position: 'absolute',
+    width: '100%',
+    textAlign: 'center',
+    lineHeight: 24,
+    fontSize: 12,
+    color: '#333333',
+    fontWeight: '600',
+  },
+  fundingSection: {
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    borderRadius: 8,
+    marginVertical: 12,
+  },
+  investorCount: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 8,
   },
 });
 
