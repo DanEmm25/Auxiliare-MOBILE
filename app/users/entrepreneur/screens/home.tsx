@@ -24,7 +24,21 @@ interface Project {
   start_date: string;
   end_date: string;
   created_at: string;
+  current_funding?: number;
+  total_investors?: number;
 }
+
+const ProgressBar = ({ current, goal }) => {
+  const progress = Math.min((current / goal) * 100, 100);
+  return (
+    <View style={styles.progressContainer}>
+      <View style={[styles.progressBar, { width: `${progress}%` }]} />
+      <Text style={styles.progressText}>
+        ₱{current.toLocaleString()} of ₱{goal.toLocaleString()} ({progress.toFixed(1)}%)
+      </Text>
+    </View>
+  );
+};
 
 export default function Home() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -62,7 +76,23 @@ export default function Home() {
       );
 
       if (response.data.success) {
-        setProjects(response.data.projects);
+        // Transform the projects data to include current_funding and total_investors
+        const projectsWithInvestments = await Promise.all(
+          response.data.projects.map(async (project) => {
+            const investmentsResponse = await axios.get(
+              `http://192.168.1.46:8081/projects/${project.id}`,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+            return {
+              ...project,
+              current_funding: investmentsResponse.data.project.current_funding || 0,
+              total_investors: investmentsResponse.data.project.total_investors || 0,
+            };
+          })
+        );
+        setProjects(projectsWithInvestments);
         setError(null);
       }
     } catch (err: any) {
@@ -250,12 +280,23 @@ export default function Home() {
                   {project.description}
                 </Text>
 
+                <View style={styles.fundingSection}>
+                  <Text style={styles.sectionTitle}>Funding Progress</Text>
+                  <ProgressBar current={project.current_funding} goal={project.funding_goal} />
+                </View>
+
                 <View style={styles.projectMetrics}>
                   <View style={styles.metricItem}>
                     <Text style={styles.metricValue}>
                       {formatCurrency(project.funding_goal)}
                     </Text>
-                    <Text style={styles.metricLabel}>Funding Goal</Text>
+                    <Text style={styles.metricLabel}>Goal</Text>
+                  </View>
+                  <View style={styles.metricItem}>
+                    <Text style={styles.metricValue}>
+                      {project.total_investors}
+                    </Text>
+                    <Text style={styles.metricLabel}>Investors</Text>
                   </View>
                   <View style={styles.metricItem}>
                     <Text style={styles.metricValue}>
@@ -578,5 +619,63 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     flex: 0.45,
     alignItems: "center",
+  },
+  progressContainer: {
+    height: 24,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 12,
+    marginVertical: 8,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+  },
+  progressText: {
+    position: 'absolute',
+    width: '100%',
+    textAlign: 'center',
+    lineHeight: 24,
+    fontSize: 12,
+    color: '#333333',
+    fontWeight: '600',
+  },
+  fundingSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A1A',
+    marginBottom: 8,
+  },
+  projectMetrics: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    marginTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+  },
+  metricItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  metricValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    marginBottom: 4,
+  },
+  metricLabel: {
+    fontSize: 14,
+    color: '#666666',
   },
 });
