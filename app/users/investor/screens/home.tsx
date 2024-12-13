@@ -114,6 +114,12 @@ const Home = () => {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
       />
+      <TouchableOpacity
+        style={styles.navigateButton}
+        onPress={() => router.push('/users/investor/screens/portfolio')}
+      >
+        <Text style={styles.navigateButtonText}>View Portfolio</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -220,6 +226,18 @@ const styles = StyleSheet.create({
     color: '#4A4A4A',
     fontWeight: '500',
     marginTop: 8,
+  },
+  navigateButton: {
+    backgroundColor: '#4CAF50',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  navigateButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

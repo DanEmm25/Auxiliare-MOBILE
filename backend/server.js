@@ -821,6 +821,41 @@ app.get("/user-investment-summary", authenticateToken, (req, res) => {
   });
 });
 
+app.get("/portfolio", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+
+  const sql = `
+    SELECT 
+      p.*,
+      i.investment_amount,
+      (SELECT COALESCE(SUM(investment_amount), 0) 
+       FROM investments 
+       WHERE project_id = p.id) as current_funding,
+      (SELECT COUNT(DISTINCT investor_id) 
+       FROM investments 
+       WHERE project_id = p.id) as total_investors
+    FROM investments i
+    JOIN projects p ON i.project_id = p.id
+    WHERE i.investor_id = ?
+    ORDER BY i.investment_date DESC
+  `;
+
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching portfolio:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error occurred while fetching portfolio",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      portfolio: results,
+    });
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
