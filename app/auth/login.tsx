@@ -64,7 +64,7 @@ export default function Login() {
         if (data.userType === "Entrepreneur") {
           router.push("/users/entrepreneur/screens/dashboard");
         } else if (data.userType === "Investor") {
-          router.push("/users/investor/dashboard");
+          router.push("/users/investor/screens/home");
         }
       } else {
         alert(data.message || "Login failed");
