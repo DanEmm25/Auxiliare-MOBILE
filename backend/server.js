@@ -322,7 +322,16 @@ app.post("/create-project", authenticateToken, async (req, res) => {
 app.get("/user-projects/:userId", authenticateToken, (req, res) => {
   const userId = req.params.userId;
 
-  const sql = "SELECT * FROM projects WHERE user_id = ?";
+  const sql = `
+    SELECT 
+      p.*,
+      COALESCE(SUM(i.investment_amount), 0) as current_funding,
+      COUNT(DISTINCT i.investor_id) as total_investors
+    FROM projects p
+    LEFT JOIN investments i ON p.id = i.project_id
+    WHERE p.user_id = ?
+    GROUP BY p.id
+    ORDER BY p.created_at DESC`;
   
   db.query(sql, [userId], (err, results) => {
     if (err) {

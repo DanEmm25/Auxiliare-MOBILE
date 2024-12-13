@@ -232,15 +232,12 @@ export default function Projects() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>My Projects</Text>
           <TouchableOpacity
-            style={[styles.createButton, Platform.OS === 'ios' && styles.createButtonIOS]}
+            style={styles.createButton}
             onPress={() => setMode(mode === 'list' ? 'create' : 'list')}
           >
-            <MaterialIcons 
-              name={mode === 'list' ? "add-circle" : "format-list-bulleted"} 
-              size={24} 
-              color="white" 
-              style={Platform.OS === 'ios' ? { marginTop: 1 } : null}
-            />
+            <Text style={styles.createButtonText}>
+              {mode === 'list' ? '+' : '←'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -636,27 +633,29 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   createButton: {
-    backgroundColor: '#4CAF50',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    backgroundColor: "#4CAF50",
+    width: Platform.OS === 'ios' ? 36 : 40,
+    height: Platform.OS === 'ios' ? 36 : 40,
+    borderRadius: Platform.OS === 'ios' ? 18 : 20,
     justifyContent: 'center',
     alignItems: 'center',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
       },
       android: {
-        elevation: 5,
+        elevation: 2,
       },
     }),
   },
-  
-  createButtonIOS: {
-    paddingTop: 2, // Adjust vertical alignment for iOS
+  createButtonText: {
+    color: "#FFFFFF",
+    fontSize: Platform.OS === 'ios' ? 24 : 28,
+    fontWeight: "400",
+    lineHeight: Platform.OS === 'ios' ? 28 : 32,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
