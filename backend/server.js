@@ -642,7 +642,7 @@ app.get("/user-balance", authenticateToken, (req, res) => {
   });
 });
 
-// Deposit funds
+// Modify the deposit endpoint to record the transaction
 app.post("/deposit", authenticateToken, async (req, res) => {
   const userId = req.user.id;
   const { amount } = req.body;
@@ -654,31 +654,101 @@ app.post("/deposit", authenticateToken, async (req, res) => {
     });
   }
 
-  const sql = "UPDATE users SET balance = balance + ? WHERE user_id = ?";
-  
-  db.query(sql, [amount, userId], (err, result) => {
+  // Start transaction
+  db.beginTransaction(async (err) => {
     if (err) {
       return res.status(500).json({
         success: false,
+        message: "Transaction error"
+      });
+    }
+
+    try {
+      // Update user balance
+      await new Promise((resolve, reject) => {
+        db.query(
+          "UPDATE users SET balance = balance + ? WHERE user_id = ?",
+          [amount, userId],
+          (err, result) => {
+            if (err) reject(err);
+            resolve(result);
+          }
+        );
+      });
+
+      // Record deposit in deposits table
+      await new Promise((resolve, reject) => {
+        db.query(
+          "INSERT INTO deposits (user_id, amount, created_at) VALUES (?, ?, ?)",
+          [userId, amount, new Date()],
+          (err, result) => {
+            if (err) reject(err);
+            resolve(result);
+          }
+        );
+      });
+
+      // Commit transaction
+      db.commit((err) => {
+        if (err) {
+          db.rollback();
+          return res.status(500).json({
+            success: false,
+            message: "Error finalizing deposit"
+          });
+        }
+
+        res.status(200).json({
+          success: true,
+          message: "Deposit successful"
+        });
+      });
+    } catch (error) {
+      db.rollback();
+      console.error("Deposit error:", error);
+      res.status(500).json({
+        success: false,
         message: "Error processing deposit"
+      });
+    }
+  });
+});
+
+// Get transaction history endpoint
+app.get("/transaction-history", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const sql = `
+    SELECT 
+      'investment' as type,
+      i.investment_amount as amount,
+      i.investment_date as date,
+      p.title as description
+    FROM investments i
+    JOIN projects p ON i.project_id = p.id
+    WHERE i.investor_id = ?
+    UNION ALL
+    SELECT 
+      'deposit' as type,
+      amount,
+      created_at as date,
+      'Wallet Deposit' as description
+    FROM deposits
+    WHERE user_id = ?
+    ORDER BY date DESC`;
+  
+  db.query(sql, [userId, userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching transactions:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching transaction history"
       });
     }
     
     res.status(200).json({
       success: true,
-      message: "Deposit successful"
+      transactions: results
     });
-  });
-});
-
-// Get transaction history (simple version)
-app.get("/transaction-history", authenticateToken, (req, res) => {
-  const userId = req.user.id;
-  // You'll need to create a transactions table for this
-  // For now, returning mock data
-  res.status(200).json({
-    success: true,
-    transactions: []
   });
 });
 
