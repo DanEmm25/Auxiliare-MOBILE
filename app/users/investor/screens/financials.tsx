@@ -77,7 +77,7 @@ const Financial = () => {
     <ScrollView style={styles.container}>
       <View style={styles.balanceCard}>
         <Text style={styles.balanceLabel}>Current Balance</Text>
-        <Text style={styles.balanceAmount}>${balance.toFixed(2)}</Text>
+        <Text style={styles.balanceAmount}>₱{balance.toFixed(2)}</Text>
       </View>
 
       <View style={styles.depositSection}>
@@ -106,11 +106,11 @@ const Financial = () => {
         <Text style={styles.infoTitle}>Financial Summary</Text>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Available for Investment:</Text>
-          <Text style={styles.infoValue}>${balance.toFixed(2)}</Text>
+          <Text style={styles.infoValue}>₱{balance.toFixed(2)}</Text>
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Total Invested:</Text>
-          <Text style={styles.infoValue}>$0.00</Text>
+          <Text style={styles.infoValue}>₱0.00</Text>
         </View>
       </View>
     </ScrollView>
