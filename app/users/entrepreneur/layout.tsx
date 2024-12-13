@@ -30,8 +30,6 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
       "/users/entrepreneur/screens/home": "Home",
       "/users/entrepreneur/screens/dashboard": "Dashboard",
       "/users/entrepreneur/screens/projects": "Projects",
-      "/users/entrepreneur/screens/messages": "Messages",
-      "/users/entrepreneur/screens/notifications": "Notifications",
       "/users/entrepreneur/screens/profile": "Profile",
     };
     return routes[path] || "Home";
@@ -55,8 +53,6 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
         Home: "/users/entrepreneur/screens/home",
         Dashboard: "/users/entrepreneur/screens/dashboard",
         Projects: "/users/entrepreneur/screens/projects",
-        Messages: "/users/entrepreneur/screens/messages",
-        Notifications: "/users/entrepreneur/screens/notifications",
         Profile: "/users/entrepreneur/screens/profile",
       };
       router.push(routes[route]);
@@ -195,54 +191,6 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
                   numberOfLines={1}
                 >
                   Projects
-                </Animated.Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.navItem,
-                currentRoute === "Messages" && styles.activeNavItem,
-              ]}
-              onPress={() => handleNavigation("Messages")}
-            >
-              <Ionicons
-                name="chatbubbles"
-                size={22}
-                color={currentRoute === "Messages" ? "#007AFF" : "#666"}
-              />
-              {isOpen && (
-                <Animated.Text
-                  style={[
-                    styles.navText,
-                    currentRoute === "Messages" && styles.activeNavText,
-                  ]}
-                  numberOfLines={1}
-                >
-                  Messages
-                </Animated.Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.navItem,
-                currentRoute === "Notifications" && styles.activeNavItem,
-              ]}
-              onPress={() => handleNavigation("Notifications")}
-            >
-              <Ionicons
-                name="notifications"
-                size={22}
-                color={currentRoute === "Notifications" ? "#007AFF" : "#666"}
-              />
-              {isOpen && (
-                <Animated.Text
-                  style={[
-                    styles.navText  ,
-                    currentRoute === "Notifications" && styles.activeNavText,
-                  ]}
-                  numberOfLines={1}
-                >
-                  Notifications
                 </Animated.Text>
               )}
             </TouchableOpacity>

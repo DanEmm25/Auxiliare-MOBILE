@@ -21,7 +21,9 @@ const SIDEBAR_COLLAPSED_WIDTH = Platform.OS === "web" ? 70 : 60;
 
 const InvestorLayout = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const sidebarAnim = useRef(new Animated.Value(SIDEBAR_COLLAPSED_WIDTH)).current;
+  const sidebarAnim = useRef(
+    new Animated.Value(SIDEBAR_COLLAPSED_WIDTH)
+  ).current;
   const router = useRouter();
   const pathname = usePathname();
 
@@ -30,9 +32,7 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
     portfolio: "/users/investor/screens/portfolio",
     investments: "/users/investor/screens/investments",
     financials: "/users/investor/screens/financials",
-    messages: "/users/investor/screens/messages",
-    notifications: "/users/investor/screens/notifications",
-    profile: "/users/investor/screens/profile"
+    profile: "/users/investor/screens/profile",
   };
 
   const getRouteFromPathname = (path: string): string => {
@@ -41,8 +41,6 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
       "/users/investor/screens/portfolio": "Portfolio",
       "/users/investor/screens/investments": "Investments",
       "/users/investor/screens/financials": "Financials",
-      "/users/investor/screens/messages": "Messages",
-      "/users/investor/screens/notifications": "Notifications",
       "/users/investor/screens/profile": "Profile",
     };
     return routes[path] || "Home";
@@ -67,8 +65,6 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
         Portfolio: "/users/investor/screens/portfolio",
         Investments: "/users/investor/screens/investments",
         Financials: "/users/investor/screens/financials",
-        Messages: "/users/investor/screens/messages",
-        Notifications: "/users/investor/screens/notifications",
         Profile: "/users/investor/screens/profile",
       };
       router.push(routes[route]);
@@ -138,19 +134,20 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
           </View>
 
           <Animated.View style={[styles.menuItems]}>
-            { [
+            {[
               { name: "Home", icon: "home" },
               { name: "Portfolio", icon: "briefcase" },
               { name: "Investments", icon: "trending-up" },
               { name: "Financials", icon: "stats-chart" },
-              { name: "Messages", icon: "chatbubbles" },
-              { name: "Notifications", icon: "notifications" },
               { name: "Profile", icon: "person" },
-              { name: "Logout", icon: "exit" }
+              { name: "Logout", icon: "exit" },
             ].map((item) => (
               <TouchableOpacity
                 key={item.name}
-                style={[styles.navItem, currentRoute === item.name && styles.activeNavItem]}
+                style={[
+                  styles.navItem,
+                  currentRoute === item.name && styles.activeNavItem,
+                ]}
                 onPress={() => handleNavigation(item.name)}
               >
                 <Ionicons
@@ -160,7 +157,10 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
                 />
                 {isOpen && (
                   <Animated.Text
-                    style={[styles.navText, currentRoute === item.name && styles.activeNavText]}
+                    style={[
+                      styles.navText,
+                      currentRoute === item.name && styles.activeNavText,
+                    ]}
                     numberOfLines={1}
                   >
                     {item.name}
