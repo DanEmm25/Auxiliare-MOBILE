@@ -496,6 +496,51 @@ app.put("/update-profile", authenticateToken, async (req, res) => {
   );
 });
 
+// Add an endpoint to fetch dashboard data
+app.get("/dashboard-data/:userId", authenticateToken, async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    // Get all projects for the user
+    const projectsQuery = "SELECT * FROM projects WHERE user_id = ?";
+    
+    db.query(projectsQuery, [userId], (err, projects) => {
+      if (err) {
+        console.error("Error fetching dashboard data:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Error fetching dashboard data"
+        });
+      }
+
+      // Calculate metrics
+      const metrics = {
+        totalProjects: projects.length,
+        activeProjects: projects.filter(p => new Date(p.end_date) >= new Date()).length,
+        fundedProjects: 0, // You'll need to add a funding status to your projects table
+        totalFunding: 0, // You'll need to add a received_funding field to your projects table
+      };
+
+      // Get recent projects (last 5)
+      const recentProjects = projects
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5);
+
+      res.status(200).json({
+        success: true,
+        metrics,
+        recentProjects
+      });
+    });
+  } catch (error) {
+    console.error("Dashboard data error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching dashboard data"
+    });
+  }
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

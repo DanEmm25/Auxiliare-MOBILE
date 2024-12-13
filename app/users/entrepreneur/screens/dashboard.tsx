@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -11,42 +11,25 @@ import {
 } from "react-native";
 import EntrepreneurLayout from "../layout";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
 
-// Mock data - replace with actual API calls
-const dashboardData = {
-  userName: "Marc",
+interface DashboardData {
   metrics: {
-    totalProjects: 12,
-    activeProjects: 5,
-    fundedProjects: 3,
-    totalFunding: 150000,
-    upcomingMilestones: 5,
-  },
-  projects: [
-    // Mock data
-    { id: 1, name: "Project 1", status: "Active" },
-    { id: 2, name: "Project 2", status: "Active" },
-    { id: 3, name: "Project 3", status: "Active" },
-    { id: 4, name: "Project 4", status: "Active" },
-    { id: 5, name: "Project 5", status: "Active" },
-  ],
-  milestones: [
-    // Mock data
-    { id: 1, name: "Milestone 1", dueDate: "2024-01-01" },
-    { id: 2, name: "Milestone 2", dueDate: "2024-02-01" },
-    { id: 3, name: "Milestone 3", dueDate: "2024-03-01" },
-    { id: 4, name: "Milestone 4", dueDate: "2024-04-01" },
-    { id: 5, name: "Milestone 5", dueDate: "2024-05-01" },
-  ],
-  pitchSessions: [
-    // Mock data
-    { id: 1, name: "Pitch Session 1", date: "2024-01-01" },
-    { id: 2, name: "Pitch Session 2", date: "2024-02-01" },
-    { id: 3, name: "Pitch Session 3", date: "2024-03-01" },
-    { id: 4, name: "Pitch Session 4", date: "2024-04-01" },
-    { id: 5, name: "Pitch Session 5", date: "2024-05-01" },
-  ],
-};
+    totalProjects: number;
+    activeProjects: number;
+    fundedProjects: number;
+    totalFunding: number;
+  };
+  recentProjects: Array<{
+    id: number;
+    title: string;
+    category: string;
+    funding_goal: number;
+    start_date: string;
+    end_date: string;
+  }>;
+}
 
 const MetricCard = ({ title, value, icon }) => (
   <View style={styles.metricCard}>
@@ -67,12 +50,58 @@ const SectionHeader = ({ title, actionText }) => (
 
 export default function EntrepreneurDashboard() {
   const [refreshing, setRefreshing] = React.useState(false);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [userName, setUserName] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("user");
+      
+      if (!token || !userStr) {
+        console.error("No token or user data found");
+        return;
+      }
+
+      const user = JSON.parse(userStr);
+      setUserName(user.username);
+
+      const response = await axios.get(
+        `http://192.168.1.46:8081/dashboard-data/${user.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (response.data.success) {
+        setDashboardData(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    // Fetch dashboard data here
-    setTimeout(() => setRefreshing(false), 2000);
+    fetchDashboardData().finally(() => setRefreshing(false));
   }, []);
+
+  if (loading) {
+    return (
+      <EntrepreneurLayout>
+        <View style={styles.container}>
+          <Text>Loading...</Text>
+        </View>
+      </EntrepreneurLayout>
+    );
+  }
 
   return (
     <EntrepreneurLayout>
@@ -82,11 +111,8 @@ export default function EntrepreneurDashboard() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Welcome Section */}
         <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeText}>
-            Welcome back, {dashboardData.userName}!
-          </Text>
+          <Text style={styles.welcomeText}>Welcome back, {userName}!</Text>
           <Text style={styles.dateText}>
             {new Date().toLocaleDateString("en-US", {
               weekday: "long",
@@ -97,68 +123,44 @@ export default function EntrepreneurDashboard() {
           </Text>
         </View>
 
-        {/* Metrics Grid */}
         <View style={styles.metricsGrid}>
           <MetricCard
             title="Total Projects"
-            value={dashboardData.metrics.totalProjects}
+            value={dashboardData?.metrics.totalProjects || 0}
             icon="folder"
           />
           <MetricCard
             title="Active Projects"
-            value={dashboardData.metrics.activeProjects}
+            value={dashboardData?.metrics.activeProjects || 0}
             icon="rocket"
           />
           <MetricCard
             title="Funded Projects"
-            value={dashboardData.metrics.fundedProjects}
+            value={dashboardData?.metrics.fundedProjects || 0}
             icon="cash"
           />
           <MetricCard
             title="Total Funding"
-            value={`₱${dashboardData.metrics.totalFunding.toLocaleString()}`}
+            value={`₱${(dashboardData?.metrics.totalFunding || 0).toLocaleString()}`}
             icon="trending-up"
-          />
-
-          <MetricCard
-            title="Upcoming Milestones"
-            value={dashboardData.metrics.upcomingMilestones}
-            icon="calendar"
           />
         </View>
 
-        {/* Projects Section */}
         <SectionHeader title="Recent Projects" actionText="View All" />
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {dashboardData.projects.map((project) => (
+          {dashboardData?.recentProjects.map((project) => (
             <View key={project.id} style={styles.projectCard}>
-              <Text style={styles.projectName}>{project.name}</Text>
-              <Text style={styles.projectStatus}>{project.status}</Text>
+              <Text style={styles.projectName}>{project.title}</Text>
+              <Text style={styles.projectCategory}>{project.category}</Text>
+              <Text style={styles.projectFunding}>
+                Goal: ₱{project.funding_goal.toLocaleString()}
+              </Text>
+              <Text style={styles.projectDates}>
+                {new Date(project.start_date).toLocaleDateString()} - {new Date(project.end_date).toLocaleDateString()}
+              </Text>
             </View>
           ))}
         </ScrollView>
-
-        {/* Milestones Section */}
-        <SectionHeader title="Upcoming Milestones" actionText="View All" />
-        <View style={styles.milestonesContainer}>
-          {dashboardData.milestones.map((milestone) => (
-            <View key={milestone.id} style={styles.milestoneItem}>
-              <Text style={styles.milestoneName}>{milestone.name}</Text>
-              <Text style={styles.milestoneDueDate}>{milestone.dueDate}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Pitch Sessions Section */}
-        <SectionHeader title="Scheduled Pitches" actionText="Schedule New" />
-        <View style={styles.pitchSessionsContainer}>
-          {dashboardData.pitchSessions.map((session) => (
-            <View key={session.id} style={styles.pitchSessionItem}>
-              <Text style={styles.pitchSessionName}>{session.name}</Text>
-              <Text style={styles.pitchSessionDate}>{session.date}</Text>
-            </View>
-          ))}
-        </View>
       </ScrollView>
     </EntrepreneurLayout>
   );
@@ -322,6 +324,22 @@ const styles = StyleSheet.create({
   pitchSessionDate: {
     fontSize: 14,
     color: "#666",
+    marginTop: 4,
+  },
+  projectCategory: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 4,
+  },
+  projectFunding: {
+    fontSize: 14,
+    color: "#007AFF",
+    marginTop: 4,
+    fontWeight: "600",
+  },
+  projectDates: {
+    fontSize: 12,
+    color: "#999",
     marginTop: 4,
   },
 });
