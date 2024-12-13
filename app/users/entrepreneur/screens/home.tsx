@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,14 +9,14 @@ import {
   RefreshControl,
   Modal,
   TextInput,
-} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
-import EntrepreneurLayout from '../layout';
-import { useRouter } from 'expo-router';
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios";
+import EntrepreneurLayout from "../layout";
+import { useRouter } from "expo-router";
 
 interface Project {
-  project_id: number;
+  id: number;
   title: string;
   description: string;
   funding_goal: number;
@@ -34,22 +34,22 @@ export default function Home() {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [editedProject, setEditedProject] = useState({
-    title: '',
-    description: '',
-    funding_goal: '',
-    category: '',
-    start_date: '',
-    end_date: '',
+    title: "",
+    description: "",
+    funding_goal: "",
+    category: "",
+    start_date: "",
+    end_date: "",
   });
   const router = useRouter();
 
   const fetchProjects = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      const userStr = await AsyncStorage.getItem('user');
-      
+      const token = await AsyncStorage.getItem("token");
+      const userStr = await AsyncStorage.getItem("user");
+
       if (!token || !userStr) {
-        setError('Authentication required');
+        setError("Authentication required");
         return;
       }
 
@@ -57,7 +57,7 @@ export default function Home() {
       const response = await axios.get(
         `http://192.168.1.46:8081/user-projects/${user.id}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -66,7 +66,7 @@ export default function Home() {
         setError(null);
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch projects');
+      setError(err.message || "Failed to fetch projects");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -87,9 +87,9 @@ export default function Home() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PH', {
-      style: 'currency',
-      currency: 'PHP'
+    return new Intl.NumberFormat("en-PH", {
+      style: "currency",
+      currency: "PHP",
     }).format(amount);
   };
 
@@ -108,9 +108,9 @@ export default function Home() {
 
   const handleDelete = async (projectId: number) => {
     try {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem("token");
       if (!token) {
-        alert('Authentication token missing');
+        alert("Authentication token missing");
         return;
       }
 
@@ -122,16 +122,16 @@ export default function Home() {
       );
 
       if (response.data.success) {
-        alert('Project deleted successfully!');
+        alert("Project deleted successfully!");
         fetchProjects();
       } else {
-        alert('Failed to delete project: ' + response.data.message);
+        alert("Failed to delete project: " + response.data.message);
       }
     } catch (error: any) {
-      console.error('Error deleting project:', error);
+      console.error("Error deleting project:", error);
       const errorMessage =
         error.response?.data?.message ||
-        'An error occurred while deleting the project.';
+        "An error occurred while deleting the project.";
       alert(errorMessage);
     }
   };
@@ -140,9 +140,9 @@ export default function Home() {
     if (!selectedProject) return;
 
     try {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem("token");
       if (!token) {
-        alert('Authentication token missing');
+        alert("Authentication token missing");
         return;
       }
 
@@ -156,28 +156,28 @@ export default function Home() {
       };
 
       const response = await axios.put(
-        `http://192.168.1.46:8081/update-project/${selectedProject.project_id}`,
+        `http://192.168.1.46:8081/update-project/${selectedProject.id}`,
         projectDataToSend,
         {
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
       if (response.data.success) {
-        alert('Project updated successfully!');
+        alert("Project updated successfully!");
         setModalVisible(false);
         fetchProjects();
       } else {
-        alert('Failed to update project: ' + response.data.message);
+        alert("Failed to update project: " + response.data.message);
       }
     } catch (error: any) {
-      console.error('Error updating project:', error);
+      console.error("Error updating project:", error);
       const errorMessage =
         error.response?.data?.message ||
-        'An error occurred while updating the project.';
+        "An error occurred while updating the project.";
       alert(errorMessage);
     }
   };
@@ -204,7 +204,7 @@ export default function Home() {
           <Text style={styles.headerTitle}>My Projects</Text>
           <TouchableOpacity
             style={styles.createButton}
-            onPress={() => router.push('/users/entrepreneur/screens/projects')}
+            onPress={() => router.push("/users/entrepreneur/screens/projects")}
           >
             <Text style={styles.createButtonText}>Create Project</Text>
           </TouchableOpacity>
@@ -221,7 +221,7 @@ export default function Home() {
         ) : (
           <View style={styles.projectsGrid}>
             {projects.map((project) => (
-              <View key={project.project_id} style={styles.projectCard}>
+              <View key={project.id} style={styles.projectCard}>
                 <Text style={styles.projectTitle}>{project.title}</Text>
                 <Text style={styles.projectDescription} numberOfLines={2}>
                   {project.description}
@@ -249,7 +249,7 @@ export default function Home() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.deleteButton}
-                    onPress={() => handleDelete(project.project_id)}
+                    onPress={() => handleDelete(project.id)}
                   >
                     <Text style={styles.buttonText}>Delete</Text>
                   </TouchableOpacity>
@@ -322,10 +322,7 @@ export default function Home() {
               }
             />
             <View style={styles.modalButtonContainer}>
-              <TouchableOpacity
-                style={styles.saveButton}
-                onPress={saveEdit}
-              >
+              <TouchableOpacity style={styles.saveButton} onPress={saveEdit}>
                 <Text style={styles.buttonText}>Save</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -345,55 +342,55 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
+    borderBottomColor: "#E9ECEF",
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   createButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
   createButtonText: {
-    color: '#FFF',
-    fontWeight: '600',
+    color: "#FFF",
+    fontWeight: "600",
   },
   centerContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   errorText: {
-    color: 'red',
+    color: "red",
     fontSize: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
   noProjectsText: {
     fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
+    color: "#666",
+    textAlign: "center",
   },
   projectsGrid: {
     padding: 16,
   },
   projectCard: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -401,89 +398,89 @@ const styles = StyleSheet.create({
   },
   projectTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 8,
   },
   projectDescription: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 12,
   },
   projectDetails: {
     borderTopWidth: 1,
-    borderTopColor: '#E9ECEF',
+    borderTopColor: "#E9ECEF",
     paddingTop: 12,
   },
   detailText: {
     fontSize: 14,
-    color: '#495057',
+    color: "#495057",
     marginBottom: 4,
   },
   buttonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
     marginTop: 10,
   },
   editButton: {
-    backgroundColor: '#FFA500',
+    backgroundColor: "#FFA500",
     padding: 8,
     borderRadius: 5,
     marginRight: 10,
   },
   deleteButton: {
-    backgroundColor: '#FF4500',
+    backgroundColor: "#FF4500",
     padding: 8,
     borderRadius: 5,
   },
   buttonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 14,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   modalContainer: {
-    width: '90%',
-    backgroundColor: '#FFF',
+    width: "90%",
+    backgroundColor: "#FFF",
     borderRadius: 10,
     padding: 20,
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   modalInput: {
     borderWidth: 1,
-    borderColor: '#CCC',
+    borderColor: "#CCC",
     borderRadius: 5,
     padding: 10,
     marginBottom: 10,
   },
   textArea: {
     height: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   modalButtonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     padding: 10,
     borderRadius: 5,
     flex: 0.45,
-    alignItems: 'center',
+    alignItems: "center",
   },
   cancelButton: {
-    backgroundColor: '#A9A9A9',
+    backgroundColor: "#A9A9A9",
     padding: 10,
     borderRadius: 5,
     flex: 0.45,
-    alignItems: 'center',
+    alignItems: "center",
   },
 });

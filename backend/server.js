@@ -354,7 +354,7 @@ app.put("/update-project/:projectId", authenticateToken, (req, res) => {
     });
   }
 
-  const sqlCheck = "SELECT * FROM projects WHERE project_id = ? AND user_id = ?";
+  const sqlCheck = "SELECT * FROM projects WHERE id = ? AND user_id = ?";
   db.query(sqlCheck, [projectId, user_id], (err, results) => {
     if (err) {
       return res.status(500).json({
@@ -370,7 +370,7 @@ app.put("/update-project/:projectId", authenticateToken, (req, res) => {
     }
 
     const sqlUpdate =
-      "UPDATE projects SET title = ?, description = ?, funding_goal = ?, category = ?, start_date = ?, end_date = ?, updated_at = ? WHERE project_id = ?";
+      "UPDATE projects SET title = ?, description = ?, funding_goal = ?, category = ?, start_date = ?, end_date = ?, updated_at = ? WHERE id = ?";
     const updated_at = new Date();
 
     db.query(
@@ -397,7 +397,7 @@ app.delete("/delete-project/:projectId", authenticateToken, (req, res) => {
   const user_id = req.user.id;
   const projectId = req.params.projectId;
 
-  const sqlCheck = "SELECT * FROM projects WHERE project_id = ? AND user_id = ?";
+  const sqlCheck = "SELECT * FROM projects WHERE id = ? AND user_id = ?";
   db.query(sqlCheck, [projectId, user_id], (err, results) => {
     if (err) {
       return res.status(500).json({
@@ -412,7 +412,7 @@ app.delete("/delete-project/:projectId", authenticateToken, (req, res) => {
       });
     }
 
-    const sqlDelete = "DELETE FROM projects WHERE project_id = ?";
+    const sqlDelete = "DELETE FROM projects WHERE id = ?";
     db.query(sqlDelete, [projectId], (err, result) => {
       if (err) {
         return res.status(500).json({
