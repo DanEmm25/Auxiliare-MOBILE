@@ -94,14 +94,17 @@ export default function Login() {
     setResetLoading(true);
     try {
       console.log("Requesting password reset for:", resetEmail);
-      
-      const response = await fetch("http://192.168.1.46:8081/request-password-reset", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: resetEmail.trim() }),
-      });
+
+      const response = await fetch(
+        "http://192.168.1.46:8081/request-password-reset",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: resetEmail.trim() }),
+        }
+      );
 
       const data = await response.json();
       console.log("Reset response:", data);
@@ -219,11 +222,7 @@ export default function Login() {
         </View>
         <Footer />
       </ScrollView>
-      <Modal
-        visible={isResetModalVisible}
-        transparent
-        animationType="slide"
-      >
+      <Modal visible={isResetModalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <TouchableOpacity
@@ -395,18 +394,18 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   modalContent: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 10,
     padding: 20,
-    width: '100%',
+    width: "100%",
     maxWidth: 400,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: {
       width: 0,
       height: 2,
@@ -417,12 +416,12 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   closeButton: {
-    position: 'absolute',
+    position: "absolute",
     right: 10,
     top: 10,
     padding: 10,
