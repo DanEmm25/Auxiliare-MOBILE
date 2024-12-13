@@ -1,58 +1,95 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  TextInput,
+  ActivityIndicator,
   TouchableOpacity,
-  Image,
-  Platform,
   RefreshControl,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import EntrepreneurLayout from "../layout";
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import EntrepreneurLayout from '../layout';
+import { useRouter } from 'expo-router';
 
-// Mock data for posts
-const mockPosts = [
-  {
-    id: 1,
-    author: {
-      name: "John Doe",
-      avatar: "https://picsum.photos/200",
-    },
-    content:
-      "Excited to share our latest milestone! Our project has reached 50% of its funding goal.",
-    timestamp: "2024-01-20T10:00:00Z",
-    likes: 42,
-    comments: 8,
-    linkedProject: {
-      title: "EcoTech Solutions",
-      thumbnail: "https://picsum.photos/100",
-      status: "Active",
-      currentFunding: 50000,
-      fundingGoal: 100000,
-    },
-    media: "https://picsum.photos/400/300",
-  },
-  // Add more mock posts...
-];
+interface Project {
+  project_id: number;
+  title: string;
+  description: string;
+  funding_goal: number;
+  category: string;
+  start_date: string;
+  end_date: string;
+  created_at: string;
+}
 
 export default function Home() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [postContent, setPostContent] = useState("");
-  const [selectedFilter, setSelectedFilter] = useState("latest");
+  const router = useRouter();
 
-  const onRefresh = React.useCallback(() => {
+  const fetchProjects = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const userStr = await AsyncStorage.getItem('user');
+      
+      if (!token || !userStr) {
+        setError('Authentication required');
+        return;
+      }
+
+      const user = JSON.parse(userStr);
+      const response = await axios.get(
+        `http://192.168.1.46:8081/user-projects/${user.id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+
+      if (response.data.success) {
+        setProjects(response.data.projects);
+        setError(null);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to fetch projects');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  const onRefresh = () => {
     setRefreshing(true);
-    // Fetch new posts here
-    setTimeout(() => setRefreshing(false), 2000);
+    fetchProjects();
+  };
+
+  useEffect(() => {
+    fetchProjects();
   }, []);
 
-  const handlePost = () => {
-    // Handle post creation
-    setPostContent("");
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
   };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-PH', {
+      style: 'currency',
+      currency: 'PHP'
+    }).format(amount);
+  };
+
+  if (loading && !refreshing) {
+    return (
+      <EntrepreneurLayout>
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      </EntrepreneurLayout>
+    );
+  }
 
   return (
     <EntrepreneurLayout>
@@ -62,141 +99,50 @@ export default function Home() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Post Creation Area */}
-        <View style={styles.postCreationCard}>
-          <TextInput
-            style={styles.postInput}
-            placeholder="Share updates about your project..."
-            multiline
-            value={postContent}
-            onChangeText={setPostContent}
-          />
-          <View style={styles.postActions}>
-            <View style={styles.mediaActions}>
-              <TouchableOpacity style={styles.mediaButton}>
-                <Ionicons name="image" size={24} color="#007AFF" />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.mediaButton}>
-                <Ionicons name="link" size={24} color="#007AFF" />
-              </TouchableOpacity>
-            </View>
-            <TouchableOpacity
-              style={[
-                styles.postButton,
-                !postContent && styles.postButtonDisabled,
-              ]}
-              disabled={!postContent}
-              onPress={handlePost}
-            >
-              <Text style={styles.postButtonText}>Post</Text>
-            </TouchableOpacity>
-          </View>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>My Projects</Text>
+          <TouchableOpacity
+            style={styles.createButton}
+            onPress={() => router.push('/users/entrepreneur/screens/projects')}
+          >
+            <Text style={styles.createButtonText}>Create Project</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Filters */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterContainer}
-        >
-          {["Latest", "Popular", "Following", "All"].map((filter) => (
-            <TouchableOpacity
-              key={filter}
-              style={[
-                styles.filterButton,
-                selectedFilter === filter.toLowerCase() &&
-                  styles.filterButtonActive,
-              ]}
-              onPress={() => setSelectedFilter(filter.toLowerCase())}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  selectedFilter === filter.toLowerCase() &&
-                    styles.filterTextActive,
-                ]}
-              >
-                {filter}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        {/* Posts Feed */}
-        {mockPosts.map((post) => (
-          <View key={post.id} style={styles.postCard}>
-            <View style={styles.postHeader}>
-              <Image
-                source={{ uri: post.author.avatar }}
-                style={styles.avatar}
-              />
-              <View style={styles.postHeaderText}>
-                <Text style={styles.authorName}>{post.author.name}</Text>
-                <Text style={styles.timestamp}>
-                  {new Date(post.timestamp).toLocaleDateString()}
+        {error ? (
+          <View style={styles.centerContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        ) : projects.length === 0 ? (
+          <View style={styles.centerContainer}>
+            <Text style={styles.noProjectsText}>No projects found</Text>
+          </View>
+        ) : (
+          <View style={styles.projectsGrid}>
+            {projects.map((project) => (
+              <View key={project.project_id} style={styles.projectCard}>
+                <Text style={styles.projectTitle}>{project.title}</Text>
+                <Text style={styles.projectDescription} numberOfLines={2}>
+                  {project.description}
                 </Text>
-              </View>
-            </View>
-
-            <Text style={styles.postContent}>{post.content}</Text>
-
-            {post.media && (
-              <Image source={{ uri: post.media }} style={styles.postMedia} />
-            )}
-
-            {post.linkedProject && (
-              <View style={styles.linkedProject}>
-                <Image
-                  source={{ uri: post.linkedProject.thumbnail }}
-                  style={styles.projectThumbnail}
-                />
-                <View style={styles.projectInfo}>
-                  <Text style={styles.projectTitle}>
-                    {post.linkedProject.title}
+                <View style={styles.projectDetails}>
+                  <Text style={styles.detailText}>
+                    Goal: {formatCurrency(project.funding_goal)}
                   </Text>
-                  <View style={styles.projectStats}>
-                    <View style={styles.progressBar}>
-                      <View
-                        style={[
-                          styles.progressFill,
-                          {
-                            width: `${
-                              (post.linkedProject.currentFunding /
-                                post.linkedProject.fundingGoal) *
-                              100
-                            }%`,
-                          },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.fundingText}>
-                      {Math.round(
-                        (post.linkedProject.currentFunding /
-                          post.linkedProject.fundingGoal) *
-                          100
-                      )}
-                      % Funded
-                    </Text>
-                  </View>
+                  <Text style={styles.detailText}>
+                    Category: {project.category}
+                  </Text>
+                  <Text style={styles.detailText}>
+                    Start: {formatDate(project.start_date)}
+                  </Text>
+                  <Text style={styles.detailText}>
+                    End: {formatDate(project.end_date)}
+                  </Text>
                 </View>
               </View>
-            )}
-
-            <View style={styles.postActions}>
-              <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="heart-outline" size={24} color="#666" />
-                <Text style={styles.actionText}>{post.likes}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="chatbubble-outline" size={24} color="#666" />
-                <Text style={styles.actionText}>{post.comments}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.actionButton}>
-                <Ionicons name="share-outline" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
+            ))}
           </View>
-        ))}
+        )}
       </ScrollView>
     </EntrepreneurLayout>
   );
@@ -205,170 +151,78 @@ export default function Home() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
+    backgroundColor: '#F8F9FA',
   },
-  postCreationCard: {
-    backgroundColor: "#FFF",
-    padding: 16,
-    margin: 16,
-    borderRadius: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E9ECEF',
   },
-  postInput: {
-    minHeight: 100,
-    textAlignVertical: "top",
-    fontSize: 16,
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: '700',
   },
-  mediaActions: {
-    flexDirection: "row",
-  },
-  mediaButton: {
-    padding: 8,
-    marginRight: 8,
-  },
-  postButton: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 24,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  postButtonDisabled: {
-    backgroundColor: "#B0B0B0",
-  },
-  postButtonText: {
-    color: "#FFF",
-    fontWeight: "600",
-  },
-  filterContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 16,
-  },
-  filterButton: {
+  createButton: {
+    backgroundColor: '#007AFF',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    marginRight: 8,
-    borderRadius: 20,
-    backgroundColor: "#F0F0F0",
+    borderRadius: 8,
   },
-  filterButtonActive: {
-    backgroundColor: "#007AFF",
+  createButtonText: {
+    color: '#FFF',
+    fontWeight: '600',
   },
-  filterText: {
-    color: "#666",
-    fontWeight: "500",
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
-  filterTextActive: {
-    color: "#FFF",
+  errorText: {
+    color: 'red',
+    fontSize: 16,
+    textAlign: 'center',
   },
-  postCard: {
-    backgroundColor: "#FFF",
+  noProjectsText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
+  projectsGrid: {
     padding: 16,
-    marginHorizontal: 16,
-    marginBottom: 16,
+  },
+  projectCard: {
+    backgroundColor: '#FFF',
     borderRadius: 12,
-    ...Platform.select({
-      ios: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  postHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  postHeaderText: {
-    flex: 1,
-  },
-  authorName: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  timestamp: {
-    fontSize: 12,
-    color: "#666",
-  },
-  postContent: {
-    fontSize: 16,
-    lineHeight: 24,
-    marginBottom: 12,
-  },
-  postMedia: {
-    width: "100%",
-    height: 200,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  linkedProject: {
-    flexDirection: "row",
-    backgroundColor: "#F8F9FA",
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 12,
-  },
-  projectThumbnail: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  projectInfo: {
-    flex: 1,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   projectTitle: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  projectDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 12,
+  },
+  projectDetails: {
+    borderTopWidth: 1,
+    borderTopColor: '#E9ECEF',
+    paddingTop: 12,
+  },
+  detailText: {
+    fontSize: 14,
+    color: '#495057',
     marginBottom: 4,
-  },
-  projectStats: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  progressBar: {
-    flex: 1,
-    height: 4,
-    backgroundColor: "#E9ECEF",
-    borderRadius: 2,
-    marginRight: 8,
-  },
-  progressFill: {
-    height: "100%",
-    backgroundColor: "#007AFF",
-    borderRadius: 2,
-  },
-  fundingText: {
-    fontSize: 12,
-    color: "#666",
-  },
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginRight: 16,
-  },
-  actionText: {
-    marginLeft: 4,
-    color: "#666",
   },
 });

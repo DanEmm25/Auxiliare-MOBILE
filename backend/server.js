@@ -319,6 +319,27 @@ app.post("/create-project", authenticateToken, async (req, res) => {
   }
 });
 
+app.get("/user-projects/:userId", authenticateToken, (req, res) => {
+  const userId = req.params.userId;
+
+  const sql = "SELECT * FROM projects WHERE user_id = ?";
+  
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching projects:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching projects"
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      projects: results
+    });
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
