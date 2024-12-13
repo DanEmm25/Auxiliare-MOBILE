@@ -12,7 +12,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import EntrepreneurLayout from '../layout';
 import axios from 'axios';
-import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -86,13 +86,15 @@ export default function Profile() {
     <EntrepreneurLayout>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Entrepreneur Profile</Text>
+          <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Profile</Text>
+          </View>
           {!isEditing ? (
             <TouchableOpacity
               style={styles.editButton}
               onPress={() => setIsEditing(true)}
             >
-              <Text style={styles.editButtonText}>Edit Profile</Text>
+              <Text style={styles.editButtonText}>Edit</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.buttonGroup}>
@@ -114,7 +116,7 @@ export default function Profile() {
 
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <MaterialIcons name="account-circle" size={120} color="#007AFF" />
+            <Ionicons name="person-circle" size={100} color="#007AFF" />
           </View>
           <Text style={styles.nameText}>{`${userData.first_name} ${userData.last_name}`}</Text>
           <Text style={styles.roleText}>{userData.user_type}</Text>
@@ -186,16 +188,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F9FA',
   },
   header: {
-    padding: 20,
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#E9ECEF',
   },
+  headerTitleContainer: {
+    flex: 1,
+  },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 22,
+    fontWeight: '600',
+    color: '#1a1a1a',
   },
   form: {
     padding: 20,
@@ -229,23 +235,24 @@ const styles = StyleSheet.create({
   },
   editButton: {
     backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+    marginLeft: 10,
   },
   editButtonText: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
   },
   buttonGroup: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   actionButton: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
   },
   cancelButton: {
     backgroundColor: '#DC3545',
@@ -268,7 +275,13 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   avatarContainer: {
-    marginBottom: 10,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    overflow: 'hidden',
   },
   nameText: {
     fontSize: 24,
