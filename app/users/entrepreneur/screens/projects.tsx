@@ -39,13 +39,13 @@ export default function Projects() {
     // Load user data when component mounts
     const loadUserData = async () => {
       try {
-        const userStr = await AsyncStorage.getItem('user');
+        const userStr = await AsyncStorage.getItem("user");
         if (userStr) {
           const user = JSON.parse(userStr);
           setUserData(user);
         }
       } catch (error) {
-        console.error('Error loading user data:', error);
+        console.error("Error loading user data:", error);
       }
     };
     loadUserData();
@@ -56,16 +56,18 @@ export default function Projects() {
       const token = await AsyncStorage.getItem("token");
       const userStr = await AsyncStorage.getItem("user");
 
-      console.log('Stored token:', token);
-      console.log('Stored user:', userStr);
+      console.log("Stored token:", token);
+      console.log("Stored user:", userStr);
 
       if (!token || !userStr) {
-        alert("Authentication token or user data missing. Please log in again.");
+        alert(
+          "Authentication token or user data missing. Please log in again."
+        );
         return;
       }
 
       const user = JSON.parse(userStr);
-      console.log('Parsed user data:', user);
+      console.log("Parsed user data:", user);
 
       const projectDataToSend = {
         title: projectData.title,
@@ -80,12 +82,12 @@ export default function Projects() {
       console.log("Using authorization token:", token);
 
       const response = await axios.post(
-        "http://192.168.1.45:8081/create-project",
+        "http://192.168.1.46:8081/create-project",
         projectDataToSend,
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -109,7 +111,9 @@ export default function Projects() {
     } catch (error: any) {
       console.error("Error creating project:", error);
       console.error("Error response:", error.response?.data);
-      const errorMessage = error.response?.data?.message || "An error occurred while creating the project.";
+      const errorMessage =
+        error.response?.data?.message ||
+        "An error occurred while creating the project.";
       alert(errorMessage);
     }
   };

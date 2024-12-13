@@ -23,22 +23,24 @@ app.get("/", (req, res) => {
 
 // Authentication middleware
 function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  console.log('Auth Header:', authHeader);
-  console.log('Token:', token);
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  console.log("Auth Header:", authHeader);
+  console.log("Token:", token);
 
   if (!token) {
-    return res.status(401).json({ success: false, message: "Access token missing" });
+    return res
+      .status(401)
+      .json({ success: false, message: "Access token missing" });
   }
 
   jwt.verify(token, secretKey, (err, user) => {
     if (err) {
-      console.error('Token verification error:', err);
+      console.error("Token verification error:", err);
       return res.status(403).json({ success: false, message: "Invalid token" });
     }
-    console.log('Decoded user from token:', user);
+    console.log("Decoded user from token:", user);
     req.user = user;
     next();
   });
@@ -194,11 +196,11 @@ app.post("/login", async (req, res) => {
       }
 
       const userPayload = {
-        id: user.user_id, 
+        id: user.user_id,
         username: user.username,
         user_type: user.user_type,
       };
-      const accessToken = jwt.sign(userPayload, secretKey, { expiresIn: '1h' }); // Generate token
+      const accessToken = jwt.sign(userPayload, secretKey, { expiresIn: "1h" }); // Generate token
 
       res.status(200).json({
         success: true,
@@ -218,25 +220,19 @@ app.post("/login", async (req, res) => {
 });
 
 app.post("/create-project", authenticateToken, async (req, res) => {
-  console.log('User from token:', req.user);
+  console.log("User from token:", req.user);
   const user_id = req.user.id;
-  
+
   if (!user_id) {
-    console.error('User ID missing in token payload');
+    console.error("User ID missing in token payload");
     return res.status(400).json({
       success: false,
-      message: "User ID not found in token"
+      message: "User ID not found in token",
     });
   }
 
-  const {
-    title,
-    description,
-    funding_goal,
-    category,
-    start_date,
-    end_date,
-  } = req.body;
+  const { title, description, funding_goal, category, start_date, end_date } =
+    req.body;
 
   // Log the received data
   console.log("Received project data:", {
@@ -335,8 +331,8 @@ app.use((err, req, res, next) => {
 // Update the listen call at the bottom of the file
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on port ${port}`);
-  console.log(`Server accessible at http://192.168.1.45:${port}`);
+  console.log(`Server accessible at http://192.168.1.46:${port}`);
   console.log(
-    `For mobile devices, use your computer's IP address: http://192.168.1.45:${port}`
+    `For mobile devices, use your computer's IP address: http://192.168.1.46:${port}`
   );
 });
