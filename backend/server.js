@@ -340,6 +340,94 @@ app.get("/user-projects/:userId", authenticateToken, (req, res) => {
   });
 });
 
+// Update project endpoint
+app.put("/update-project/:projectId", authenticateToken, (req, res) => {
+  const user_id = req.user.id;
+  const projectId = req.params.projectId;
+  const { title, description, funding_goal, category, start_date, end_date } = req.body;
+
+  // Basic validation
+  if (!title || !description || !funding_goal || !category || !start_date || !end_date) {
+    return res.status(400).json({
+      success: false,
+      message: "All fields are required",
+    });
+  }
+
+  const sqlCheck = "SELECT * FROM projects WHERE project_id = ? AND user_id = ?";
+  db.query(sqlCheck, [projectId, user_id], (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Database error occurred",
+      });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    const sqlUpdate =
+      "UPDATE projects SET title = ?, description = ?, funding_goal = ?, category = ?, start_date = ?, end_date = ?, updated_at = ? WHERE project_id = ?";
+    const updated_at = new Date();
+
+    db.query(
+      sqlUpdate,
+      [title, description, funding_goal, category, start_date, end_date, updated_at, projectId],
+      (err, result) => {
+        if (err) {
+          return res.status(500).json({
+            success: false,
+            message: "Database error occurred during update",
+          });
+        }
+        res.status(200).json({
+          success: true,
+          message: "Project updated successfully",
+        });
+      }
+    );
+  });
+});
+
+// Delete project endpoint
+app.delete("/delete-project/:projectId", authenticateToken, (req, res) => {
+  const user_id = req.user.id;
+  const projectId = req.params.projectId;
+
+  const sqlCheck = "SELECT * FROM projects WHERE project_id = ? AND user_id = ?";
+  db.query(sqlCheck, [projectId, user_id], (err, results) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Database error occurred",
+      });
+    }
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    const sqlDelete = "DELETE FROM projects WHERE project_id = ?";
+    db.query(sqlDelete, [projectId], (err, result) => {
+      if (err) {
+        return res.status(500).json({
+          success: false,
+          message: "Database error occurred during deletion",
+        });
+      }
+      res.status(200).json({
+        success: true,
+        message: "Project deleted successfully",
+      });
+    });
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

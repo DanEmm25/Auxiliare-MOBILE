@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
+  Modal,
+  TextInput,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
@@ -29,6 +31,16 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [editedProject, setEditedProject] = useState({
+    title: '',
+    description: '',
+    funding_goal: '',
+    category: '',
+    start_date: '',
+    end_date: '',
+  });
   const router = useRouter();
 
   const fetchProjects = async () => {
@@ -79,6 +91,95 @@ export default function Home() {
       style: 'currency',
       currency: 'PHP'
     }).format(amount);
+  };
+
+  const handleEdit = (project: Project) => {
+    setSelectedProject(project);
+    setEditedProject({
+      title: project.title,
+      description: project.description,
+      funding_goal: project.funding_goal.toString(),
+      category: project.category,
+      start_date: project.start_date,
+      end_date: project.end_date,
+    });
+    setModalVisible(true);
+  };
+
+  const handleDelete = async (projectId: number) => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        alert('Authentication token missing');
+        return;
+      }
+
+      const response = await axios.delete(
+        `http://192.168.1.46:8081/delete-project/${projectId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (response.data.success) {
+        alert('Project deleted successfully!');
+        fetchProjects();
+      } else {
+        alert('Failed to delete project: ' + response.data.message);
+      }
+    } catch (error: any) {
+      console.error('Error deleting project:', error);
+      const errorMessage =
+        error.response?.data?.message ||
+        'An error occurred while deleting the project.';
+      alert(errorMessage);
+    }
+  };
+
+  const saveEdit = async () => {
+    if (!selectedProject) return;
+
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        alert('Authentication token missing');
+        return;
+      }
+
+      const projectDataToSend = {
+        title: editedProject.title,
+        description: editedProject.description,
+        funding_goal: parseFloat(editedProject.funding_goal),
+        category: editedProject.category,
+        start_date: editedProject.start_date,
+        end_date: editedProject.end_date,
+      };
+
+      const response = await axios.put(
+        `http://192.168.1.46:8081/update-project/${selectedProject.project_id}`,
+        projectDataToSend,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        alert('Project updated successfully!');
+        setModalVisible(false);
+        fetchProjects();
+      } else {
+        alert('Failed to update project: ' + response.data.message);
+      }
+    } catch (error: any) {
+      console.error('Error updating project:', error);
+      const errorMessage =
+        error.response?.data?.message ||
+        'An error occurred while updating the project.';
+      alert(errorMessage);
+    }
   };
 
   if (loading && !refreshing) {
@@ -139,11 +240,104 @@ export default function Home() {
                     End: {formatDate(project.end_date)}
                   </Text>
                 </View>
+                <View style={styles.buttonContainer}>
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => handleEdit(project)}
+                  >
+                    <Text style={styles.buttonText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDelete(project.project_id)}
+                  >
+                    <Text style={styles.buttonText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             ))}
           </View>
         )}
       </ScrollView>
+
+      {/* Edit Modal */}
+      <Modal
+        visible={modalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Edit Project</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Title"
+              value={editedProject.title}
+              onChangeText={(text) =>
+                setEditedProject({ ...editedProject, title: text })
+              }
+            />
+            <TextInput
+              style={[styles.modalInput, styles.textArea]}
+              placeholder="Description"
+              multiline
+              numberOfLines={4}
+              value={editedProject.description}
+              onChangeText={(text) =>
+                setEditedProject({ ...editedProject, description: text })
+              }
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Funding Goal"
+              keyboardType="numeric"
+              value={editedProject.funding_goal}
+              onChangeText={(text) =>
+                setEditedProject({ ...editedProject, funding_goal: text })
+              }
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Category"
+              value={editedProject.category}
+              onChangeText={(text) =>
+                setEditedProject({ ...editedProject, category: text })
+              }
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Start Date (YYYY-MM-DD)"
+              value={editedProject.start_date}
+              onChangeText={(text) =>
+                setEditedProject({ ...editedProject, start_date: text })
+              }
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="End Date (YYYY-MM-DD)"
+              value={editedProject.end_date}
+              onChangeText={(text) =>
+                setEditedProject({ ...editedProject, end_date: text })
+              }
+            />
+            <View style={styles.modalButtonContainer}>
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={saveEdit}
+              >
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setModalVisible(false)}
+              >
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </EntrepreneurLayout>
   );
 }
@@ -224,5 +418,72 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#495057',
     marginBottom: 4,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 10,
+  },
+  editButton: {
+    backgroundColor: '#FFA500',
+    padding: 8,
+    borderRadius: 5,
+    marginRight: 10,
+  },
+  deleteButton: {
+    backgroundColor: '#FF4500',
+    padding: 8,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: '#FFF',
+    fontSize: 14,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    width: '90%',
+    backgroundColor: '#FFF',
+    borderRadius: 10,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: '#CCC',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  modalButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  saveButton: {
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 5,
+    flex: 0.45,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#A9A9A9',
+    padding: 10,
+    borderRadius: 5,
+    flex: 0.45,
+    alignItems: 'center',
   },
 });
