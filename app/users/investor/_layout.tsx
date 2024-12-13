@@ -1,13 +1,15 @@
+import React from 'react';
 import { Stack } from "expo-router";
+import InvestorLayout from './layout';
 
-const InvestorLayout = () => {
+export default function Layout() {
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    />
+    <InvestorLayout>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
+      />
+    </InvestorLayout>
   );
-};
-
-export default InvestorLayout;
+}

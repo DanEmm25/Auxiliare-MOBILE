@@ -36,8 +36,16 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
   };
 
   const getRouteFromPathname = (path: string): string => {
-    const routeMap = Object.entries(routes).find(([_, value]) => value === path);
-    return routeMap ? routeMap[0].charAt(0).toUpperCase() + routeMap[0].slice(1) : "Home";
+    const routes: { [key: string]: string } = {
+      "/users/investor/screens/home": "Home",
+      "/users/investor/screens/portfolio": "Portfolio",
+      "/users/investor/screens/investments": "Investments",
+      "/users/investor/screens/financials": "Financials",
+      "/users/investor/screens/messages": "Messages",
+      "/users/investor/screens/notifications": "Notifications",
+      "/users/investor/screens/profile": "Profile",
+    };
+    return routes[path] || "Home";
   };
 
   const handleLogout = async () => {
@@ -54,8 +62,16 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
     if (route === "Logout") {
       handleLogout();
     } else {
-      const path = routes[route.toLowerCase()];
-      if (path) router.push(path);
+      const routes: { [key: string]: string } = {
+        Home: "/users/investor/screens/home",
+        Portfolio: "/users/investor/screens/portfolio",
+        Investments: "/users/investor/screens/investments",
+        Financials: "/users/investor/screens/financials",
+        Messages: "/users/investor/screens/messages",
+        Notifications: "/users/investor/screens/notifications",
+        Profile: "/users/investor/screens/profile",
+      };
+      router.push(routes[route]);
     }
   };
 
