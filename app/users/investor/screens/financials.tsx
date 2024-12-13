@@ -15,28 +15,46 @@ const Financial = () => {
   const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [investmentSummary, setInvestmentSummary] = useState({
+    totalInvestments: 0,
+    totalInvested: 0,
+    activeInvestments: 0,
+  });
 
-  const fetchBalance = async () => {
+  const fetchData = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await fetch('http://192.168.1.46:8081/user-balance', {
+      
+      // Fetch balance
+      const balanceResponse = await fetch('http://192.168.1.46:8081/user-balance', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      const data = await response.json();
-      if (data.success) {
-        setBalance(data.balance);
+      const balanceData = await balanceResponse.json();
+      
+      // Fetch investment summary
+      const summaryResponse = await fetch('http://192.168.1.46:8081/user-investment-summary', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const summaryData = await summaryResponse.json();
+
+      if (balanceData.success) {
+        setBalance(balanceData.balance);
+      }
+      if (summaryData.success) {
+        setInvestmentSummary(summaryData.summary);
       }
     } catch (error) {
-      console.error('Error fetching balance:', error);
-      Alert.alert('Error', 'Failed to fetch balance');
+      console.error('Error fetching data:', error);
+      Alert.alert('Error', 'Failed to fetch financial data');
     }
   };
 
   useEffect(() => {
-    fetchBalance();
+    fetchData();
   }, []);
 
   const handleDeposit = async () => {
@@ -60,7 +78,7 @@ const Financial = () => {
       const data = await response.json();
       if (data.success) {
         Alert.alert('Success', 'Deposit successful');
-        fetchBalance();
+        fetchData();
         setAmount('');
       } else {
         Alert.alert('Error', data.message);
@@ -110,7 +128,21 @@ const Financial = () => {
         </View>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Total Invested:</Text>
-          <Text style={styles.infoValue}>₱0.00</Text>
+          <Text style={styles.infoValue}>₱{investmentSummary.totalInvested.toFixed(2)}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Number of Investments:</Text>
+          <Text style={styles.infoValue}>{investmentSummary.totalInvestments}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Active Investments:</Text>
+          <Text style={styles.infoValue}>{investmentSummary.activeInvestments}</Text>
+        </View>
+        <View style={styles.infoRow}>
+          <Text style={styles.infoLabel}>Total Portfolio Value:</Text>
+          <Text style={styles.infoValue}>
+            ₱{(balance + investmentSummary.totalInvested).toFixed(2)}
+          </Text>
         </View>
       </View>
     </ScrollView>

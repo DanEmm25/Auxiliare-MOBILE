@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  TextInput,
+  Alert,
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -13,6 +15,8 @@ const ProjectDetail = () => {
   const { id } = useLocalSearchParams();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [investAmount, setInvestAmount] = useState('');
+  const [userBalance, setUserBalance] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -42,11 +46,75 @@ const ProjectDetail = () => {
     };
 
     fetchProject();
+
+    const fetchBalance = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const response = await fetch("http://192.168.1.46:8081/user-balance", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        const data = await response.json();
+        if (data.success) {
+          setUserBalance(data.balance);
+        }
+      } catch (error) {
+        console.error("Error fetching balance:", error);
+      }
+    };
+
+    fetchBalance();
   }, [id]);
 
-  const handleInvest = () => {
-    // Implement investment logic here
-    console.log("Invest button pressed");
+  const handleInvest = async () => {
+    if (!investAmount || parseFloat(investAmount) <= 0) {
+      Alert.alert("Error", "Please enter a valid amount");
+      return;
+    }
+
+    if (parseFloat(investAmount) > userBalance) {
+      Alert.alert("Error", "Insufficient balance");
+      return;
+    }
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const response = await fetch("http://192.168.1.46:8081/invest", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          project_id: id,
+          investment_amount: parseFloat(investAmount),
+        }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert(
+          "Investment Successful",
+          "Your investment has been processed successfully. View it in the Investments tab.",
+          [
+            {
+              text: "View Investments",
+              onPress: () => router.push("/users/investor/screens/investments"),
+            },
+            { text: "Stay Here", style: "cancel" },
+          ]
+        );
+        setInvestAmount('');
+        // Refresh user balance
+        fetchBalance();
+      } else {
+        Alert.alert("Error", data.message);
+      }
+    } catch (error) {
+      console.error("Investment error:", error);
+      Alert.alert("Error", "Failed to process investment");
+    }
   };
 
   if (loading) {
@@ -70,7 +138,9 @@ const ProjectDetail = () => {
       <Text style={styles.title}>{project.title}</Text>
       <Text style={styles.description}>{project.description}</Text>
       <Text style={styles.category}>Category: {project.category}</Text>
-      <Text style={styles.fundingGoal}>Funding Goal: ${project.funding_goal}</Text>
+      <Text style={styles.fundingGoal}>
+        Funding Goal: ₱{project.funding_goal}
+      </Text>
       <Text style={styles.dates}>
         Start Date: {new Date(project.start_date).toLocaleDateString()}
       </Text>
@@ -78,9 +148,19 @@ const ProjectDetail = () => {
         End Date: {new Date(project.end_date).toLocaleDateString()}
       </Text>
       {/* Add other project details as needed */}
-      <TouchableOpacity style={styles.investButton} onPress={handleInvest}>
-        <Text style={styles.investButtonText}>Invest Now</Text>
-      </TouchableOpacity>
+      <View style={styles.investmentSection}>
+        <Text style={styles.balanceText}>Your Balance: ₱{userBalance}</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter investment amount"
+          keyboardType="decimal-pad"
+          value={investAmount}
+          onChangeText={setInvestAmount}
+        />
+        <TouchableOpacity style={styles.investButton} onPress={handleInvest}>
+          <Text style={styles.investButtonText}>Invest Now</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -134,6 +214,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  investmentSection: {
+    marginTop: 24,
+    padding: 16,
+    backgroundColor: '#F2F2F7',
+    borderRadius: 8,
+  },
+  balanceText: {
+    fontSize: 16,
+    color: '#333333',
+    marginBottom: 12,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#CCCCCC',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 16,
   },
 });
 

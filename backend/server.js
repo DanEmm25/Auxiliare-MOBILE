@@ -648,6 +648,166 @@ app.get("/transaction-history", authenticateToken, (req, res) => {
   });
 });
 
+// Create investment endpoint
+app.post("/invest", authenticateToken, async (req, res) => {
+  const investor_id = req.user.id;
+  const { project_id, investment_amount } = req.body;
+
+  // Validate input
+  if (!project_id || !investment_amount || investment_amount <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid investment details"
+    });
+  }
+
+  // Start transaction
+  db.beginTransaction(async (err) => {
+    if (err) {
+      return res.status(500).json({
+        success: false,
+        message: "Transaction error"
+      });
+    }
+
+    try {
+      // Check user balance
+      const balanceQuery = "SELECT balance FROM users WHERE user_id = ?";
+      const [balanceResult] = await new Promise((resolve, reject) => {
+        db.query(balanceQuery, [investor_id], (err, result) => {
+          if (err) reject(err);
+          resolve(result);
+        });
+      });
+
+      if (balanceResult.balance < investment_amount) {
+        db.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient balance"
+        });
+      }
+
+      // Create investment record
+      const investment_date = new Date();
+      const investment_status = "active";
+      const investmentQuery = `
+        INSERT INTO investments 
+        (investor_id, project_id, investment_amount, investment_date, investment_status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `;
+
+      await new Promise((resolve, reject) => {
+        db.query(
+          investmentQuery,
+          [
+            investor_id,
+            project_id,
+            investment_amount,
+            investment_date,
+            investment_status,
+            investment_date,
+            investment_date
+          ],
+          (err, result) => {
+            if (err) reject(err);
+            resolve(result);
+          }
+        );
+      });
+
+      // Update user balance
+      const updateBalanceQuery = "UPDATE users SET balance = balance - ? WHERE user_id = ?";
+      await new Promise((resolve, reject) => {
+        db.query(updateBalanceQuery, [investment_amount, investor_id], (err, result) => {
+          if (err) reject(err);
+          resolve(result);
+        });
+      });
+
+      // Commit transaction
+      db.commit((err) => {
+        if (err) {
+          db.rollback();
+          return res.status(500).json({
+            success: false,
+            message: "Error finalizing investment"
+          });
+        }
+
+        res.status(200).json({
+          success: true,
+          message: "Investment successful"
+        });
+      });
+    } catch (error) {
+      db.rollback();
+      console.error("Investment error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error processing investment"
+      });
+    }
+  });
+});
+
+// Get user investments with project details
+app.get("/user-investments", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const sql = `
+    SELECT i.*, p.title as project_title 
+    FROM investments i 
+    JOIN projects p ON i.project_id = p.id 
+    WHERE i.investor_id = ? 
+    ORDER BY i.investment_date DESC`;
+  
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching investments:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching investments"
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      investments: results
+    });
+  });
+});
+
+// Get user investment summary
+app.get("/user-investment-summary", authenticateToken, (req, res) => {
+  const userId = req.user.id;
+  const sql = `
+    SELECT 
+      COUNT(*) as total_investments,
+      SUM(investment_amount) as total_invested,
+      COUNT(CASE WHEN investment_status = 'active' THEN 1 END) as active_investments
+    FROM investments 
+    WHERE investor_id = ?`;
+  
+  db.query(sql, [userId], (err, results) => {
+    if (err) {
+      console.error("Error fetching investment summary:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching investment summary"
+      });
+    }
+    
+    res.status(200).json({
+      success: true,
+      summary: {
+        totalInvestments: results[0].total_investments || 0,
+        totalInvested: results[0].total_invested || 0,
+        activeInvestments: results[0].active_investments || 0
+      }
+    });
+  });
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
