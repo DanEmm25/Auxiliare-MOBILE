@@ -340,6 +340,54 @@ app.get("/user-projects/:userId", authenticateToken, (req, res) => {
   });
 });
 
+// Endpoint to fetch all projects
+app.get("/projects", authenticateToken, (req, res) => {
+  const sql = "SELECT * FROM projects";
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching projects:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching projects",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      projects: results,
+    });
+  });
+});
+
+// Endpoint to fetch a single project by ID
+app.get("/projects/:id", authenticateToken, (req, res) => {
+  const projectId = req.params.id;
+  const sql = "SELECT * FROM projects WHERE id = ?";
+
+  db.query(sql, [projectId], (err, results) => {
+    if (err) {
+      console.error("Error fetching project:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Error fetching project",
+      });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Project not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      project: results[0],
+    });
+  });
+});
+
 // Update project endpoint
 app.put("/update-project/:projectId", authenticateToken, (req, res) => {
   const user_id = req.user.id;
