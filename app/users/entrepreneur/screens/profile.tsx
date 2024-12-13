@@ -6,11 +6,13 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  Alert
+  Alert,
+  Image
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import EntrepreneurLayout from '../layout';
 import axios from 'axios';
+import { MaterialIcons } from '@expo/vector-icons';
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
@@ -84,7 +86,7 @@ export default function Profile() {
     <EntrepreneurLayout>
       <ScrollView style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.headerTitle}>Entrepreneur Profile</Text>
           {!isEditing ? (
             <TouchableOpacity
               style={styles.editButton}
@@ -110,57 +112,67 @@ export default function Profile() {
           )}
         </View>
 
+        <View style={styles.profileSection}>
+          <View style={styles.avatarContainer}>
+            <MaterialIcons name="account-circle" size={120} color="#007AFF" />
+          </View>
+          <Text style={styles.nameText}>{`${userData.first_name} ${userData.last_name}`}</Text>
+          <Text style={styles.roleText}>{userData.user_type}</Text>
+        </View>
+
         <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Role</Text>
-            <Text style={styles.roleText}>{userData.user_type}</Text>
-          </View>
+          <View style={styles.card}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Role</Text>
+              <Text style={styles.roleText}>{userData.user_type}</Text>
+            </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Username</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.disabledInput]}
-              value={userData.username}
-              onChangeText={(text) =>
-                setUserData({ ...userData, username: text })
-              }
-              editable={isEditing}
-            />
-          </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Username</Text>
+              <TextInput
+                style={[styles.input, !isEditing && styles.disabledInput]}
+                value={userData.username}
+                onChangeText={(text) =>
+                  setUserData({ ...userData, username: text })
+                }
+                editable={isEditing}
+              />
+            </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.disabledInput]}
-              value={userData.email}
-              onChangeText={(text) => setUserData({ ...userData, email: text })}
-              editable={isEditing}
-              keyboardType="email-address"
-            />
-          </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={[styles.input, !isEditing && styles.disabledInput]}
+                value={userData.email}
+                onChangeText={(text) => setUserData({ ...userData, email: text })}
+                editable={isEditing}
+                keyboardType="email-address"
+              />
+            </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>First Name</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.disabledInput]}
-              value={userData.first_name}
-              onChangeText={(text) =>
-                setUserData({ ...userData, first_name: text })
-              }
-              editable={isEditing}
-            />
-          </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>First Name</Text>
+              <TextInput
+                style={[styles.input, !isEditing && styles.disabledInput]}
+                value={userData.first_name}
+                onChangeText={(text) =>
+                  setUserData({ ...userData, first_name: text })
+                }
+                editable={isEditing}
+              />
+            </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Last Name</Text>
-            <TextInput
-              style={[styles.input, !isEditing && styles.disabledInput]}
-              value={userData.last_name}
-              onChangeText={(text) =>
-                setUserData({ ...userData, last_name: text })
-              }
-              editable={isEditing}
-            />
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Last Name</Text>
+              <TextInput
+                style={[styles.input, !isEditing && styles.disabledInput]}
+                value={userData.last_name}
+                onChangeText={(text) =>
+                  setUserData({ ...userData, last_name: text })
+                }
+                editable={isEditing}
+              />
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -250,5 +262,24 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  profileSection: {
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  avatarContainer: {
+    marginBottom: 10,
+  },
+  nameText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  card: {
+    backgroundColor: '#FFF',
+    padding: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E9ECEF',
   },
 });
