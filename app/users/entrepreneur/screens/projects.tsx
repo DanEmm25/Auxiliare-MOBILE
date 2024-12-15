@@ -18,9 +18,9 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import EntrepreneurLayout from "../layout";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from "@expo/vector-icons";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const categories = [
   "Education",
@@ -31,7 +31,7 @@ const categories = [
 ];
 
 export default function Projects() {
-  const [mode, setMode] = useState('list'); // 'list' or 'create'
+  const [mode, setMode] = useState("list"); // 'list' or 'create'
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,11 +47,11 @@ export default function Projects() {
   const [showEndDate, setShowEndDate] = useState(false);
   const [datePickerVisible, setDatePickerVisible] = useState({
     start: false,
-    end: false
+    end: false,
   });
   const [tempDate, setTempDate] = useState({
     start: new Date(),
-    end: new Date()
+    end: new Date(),
   });
 
   useEffect(() => {
@@ -65,9 +65,9 @@ export default function Projects() {
       const user = JSON.parse(userStr);
 
       const response = await axios.get(
-        `http://192.168.1.46:8081/user-projects/${user.id}`,
+        `http://192.168.0.120:8081/user-projects/${user.id}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -101,7 +101,7 @@ export default function Projects() {
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-    
+
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem("token");
@@ -133,7 +133,7 @@ export default function Projects() {
       console.log("Using authorization token:", token);
 
       const response = await axios.post(
-        "http://192.168.1.46:8081/create-project",
+        "http://192.168.0.120:8081/create-project",
         projectDataToSend,
         {
           headers: {
@@ -157,7 +157,7 @@ export default function Projects() {
           endDate: new Date(),
         });
         await fetchProjects();
-        setMode('list');
+        setMode("list");
       } else {
         alert("Failed to create project: " + response.data.message);
       }
@@ -173,12 +173,12 @@ export default function Projects() {
     }
   };
 
-  const handleDateConfirm = (type: 'start' | 'end') => {
-    setProjectData(prev => ({
+  const handleDateConfirm = (type: "start" | "end") => {
+    setProjectData((prev) => ({
       ...prev,
-      [type === 'start' ? 'startDate' : 'endDate']: tempDate[type]
+      [type === "start" ? "startDate" : "endDate"]: tempDate[type],
     }));
-    setDatePickerVisible(prev => ({ ...prev, [type]: false }));
+    setDatePickerVisible((prev) => ({ ...prev, [type]: false }));
   };
 
   const renderProjectCard = (project) => (
@@ -187,15 +187,13 @@ export default function Projects() {
         <Text style={styles.projectTitle} numberOfLines={1}>
           {project.title}
         </Text>
-        <Text style={styles.projectCategory}>
-          {project.category}
-        </Text>
+        <Text style={styles.projectCategory}>{project.category}</Text>
       </View>
-      
+
       <Text style={styles.projectDescription} numberOfLines={2}>
         {project.description}
       </Text>
-      
+
       <View style={styles.projectStats}>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Goal</Text>
@@ -211,15 +209,13 @@ export default function Projects() {
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statLabel}>Investors</Text>
-          <Text style={styles.statValue}>
-            {project.total_investors || 0}
-          </Text>
+          <Text style={styles.statValue}>{project.total_investors || 0}</Text>
         </View>
       </View>
 
       <View style={styles.projectDates}>
         <Text style={styles.dateText}>
-          {new Date(project.start_date).toLocaleDateString()} - 
+          {new Date(project.start_date).toLocaleDateString()} -
           {new Date(project.end_date).toLocaleDateString()}
         </Text>
       </View>
@@ -233,15 +229,15 @@ export default function Projects() {
           <Text style={styles.headerTitle}>My Projects</Text>
           <TouchableOpacity
             style={styles.createButton}
-            onPress={() => setMode(mode === 'list' ? 'create' : 'list')}
+            onPress={() => setMode(mode === "list" ? "create" : "list")}
           >
             <Text style={styles.createButtonText}>
-              {mode === 'list' ? '+' : '←'}
+              {mode === "list" ? "+" : "←"}
             </Text>
           </TouchableOpacity>
         </View>
 
-        {mode === 'list' ? (
+        {mode === "list" ? (
           <ScrollView
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -252,14 +248,16 @@ export default function Projects() {
             {projects.map(renderProjectCard)}
           </ScrollView>
         ) : (
-          <ScrollView 
+          <ScrollView
             style={styles.formContainer}
             contentContainerStyle={styles.formContentContainer}
             keyboardShouldPersistTaps="handled"
           >
             <View style={styles.header}>
               <Text style={styles.headerTitle}>Create New Project</Text>
-              <Text style={styles.headerSubtitle}>Launch your next big idea</Text>
+              <Text style={styles.headerSubtitle}>
+                Launch your next big idea
+              </Text>
             </View>
 
             <View style={styles.card}>
@@ -298,7 +296,10 @@ export default function Projects() {
                     style={[styles.input, styles.numberInput]}
                     value={projectData.fundingGoal}
                     onChangeText={(text) =>
-                      setProjectData({ ...projectData, fundingGoal: text.replace(/[^0-9]/g, '') })
+                      setProjectData({
+                        ...projectData,
+                        fundingGoal: text.replace(/[^0-9]/g, ""),
+                      })
                     }
                     placeholder="0"
                     placeholderTextColor="#999"
@@ -308,7 +309,7 @@ export default function Projects() {
 
                 <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
                   <Text style={styles.label}>Category</Text>
-                  {Platform.OS === 'ios' ? (
+                  {Platform.OS === "ios" ? (
                     <TouchableOpacity
                       style={styles.pickerButton}
                       onPress={() => {
@@ -316,9 +317,10 @@ export default function Projects() {
                         Alert.alert(
                           "Select Category",
                           "",
-                          categories.map(category => ({
+                          categories.map((category) => ({
                             text: category,
-                            onPress: () => setProjectData({ ...projectData, category })
+                            onPress: () =>
+                              setProjectData({ ...projectData, category }),
                           }))
                         );
                       }}
@@ -355,8 +357,14 @@ export default function Projects() {
                   <TouchableOpacity
                     style={styles.dateButton}
                     onPress={() => {
-                      setTempDate(prev => ({ ...prev, start: projectData.startDate }));
-                      setDatePickerVisible(prev => ({ ...prev, start: true }));
+                      setTempDate((prev) => ({
+                        ...prev,
+                        start: projectData.startDate,
+                      }));
+                      setDatePickerVisible((prev) => ({
+                        ...prev,
+                        start: true,
+                      }));
                     }}
                   >
                     <Text style={styles.dateButtonText}>
@@ -370,8 +378,11 @@ export default function Projects() {
                   <TouchableOpacity
                     style={styles.dateButton}
                     onPress={() => {
-                      setTempDate(prev => ({ ...prev, end: projectData.endDate }));
-                      setDatePickerVisible(prev => ({ ...prev, end: true }));
+                      setTempDate((prev) => ({
+                        ...prev,
+                        end: projectData.endDate,
+                      }));
+                      setDatePickerVisible((prev) => ({ ...prev, end: true }));
                     }}
                   >
                     <Text style={styles.dateButtonText}>
@@ -380,7 +391,7 @@ export default function Projects() {
                   </TouchableOpacity>
                 </View>
 
-                {Platform.OS === 'ios' && (
+                {Platform.OS === "ios" && (
                   <>
                     <Modal
                       transparent
@@ -391,14 +402,23 @@ export default function Projects() {
                         <View style={styles.datePickerContainer}>
                           <View style={styles.datePickerHeader}>
                             <TouchableOpacity
-                              onPress={() => setDatePickerVisible(prev => ({ ...prev, start: false }))}
+                              onPress={() =>
+                                setDatePickerVisible((prev) => ({
+                                  ...prev,
+                                  start: false,
+                                }))
+                              }
                             >
-                              <Text style={styles.datePickerCancelText}>Cancel</Text>
+                              <Text style={styles.datePickerCancelText}>
+                                Cancel
+                              </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                              onPress={() => handleDateConfirm('start')}
+                              onPress={() => handleDateConfirm("start")}
                             >
-                              <Text style={styles.datePickerDoneText}>Done</Text>
+                              <Text style={styles.datePickerDoneText}>
+                                Done
+                              </Text>
                             </TouchableOpacity>
                           </View>
                           <DateTimePicker
@@ -406,7 +426,11 @@ export default function Projects() {
                             mode="date"
                             display="spinner"
                             onChange={(event, date) => {
-                              if (date) setTempDate(prev => ({ ...prev, start: date }));
+                              if (date)
+                                setTempDate((prev) => ({
+                                  ...prev,
+                                  start: date,
+                                }));
                             }}
                             minimumDate={new Date()}
                             style={styles.datePickerIOS}
@@ -424,14 +448,23 @@ export default function Projects() {
                         <View style={styles.datePickerContainer}>
                           <View style={styles.datePickerHeader}>
                             <TouchableOpacity
-                              onPress={() => setDatePickerVisible(prev => ({ ...prev, end: false }))}
+                              onPress={() =>
+                                setDatePickerVisible((prev) => ({
+                                  ...prev,
+                                  end: false,
+                                }))
+                              }
                             >
-                              <Text style={styles.datePickerCancelText}>Cancel</Text>
+                              <Text style={styles.datePickerCancelText}>
+                                Cancel
+                              </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                              onPress={() => handleDateConfirm('end')}
+                              onPress={() => handleDateConfirm("end")}
                             >
-                              <Text style={styles.datePickerDoneText}>Done</Text>
+                              <Text style={styles.datePickerDoneText}>
+                                Done
+                              </Text>
                             </TouchableOpacity>
                           </View>
                           <DateTimePicker
@@ -439,7 +472,8 @@ export default function Projects() {
                             mode="date"
                             display="spinner"
                             onChange={(event, date) => {
-                              if (date) setTempDate(prev => ({ ...prev, end: date }));
+                              if (date)
+                                setTempDate((prev) => ({ ...prev, end: date }));
                             }}
                             minimumDate={tempDate.start}
                             style={styles.datePickerIOS}
@@ -451,7 +485,10 @@ export default function Projects() {
                 )}
               </View>
 
-              <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleSubmit}
+              >
                 <Text style={styles.submitButtonText}>Launch Project</Text>
               </TouchableOpacity>
             </View>
@@ -474,13 +511,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F9FA",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: "#EEEEEE",
   },
   headerTitle: {
     fontSize: 28,
@@ -504,7 +541,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginHorizontal: -8,
   },
   inputGroup: {
@@ -518,39 +555,39 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: "#FFFFFF",
-    padding: Platform.OS === 'ios' ? 16 : 12,
+    padding: Platform.OS === "ios" ? 16 : 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#E0E0E0",
-    fontSize: Platform.OS === 'ios' ? 16 : 14,
+    fontSize: Platform.OS === "ios" ? 16 : 14,
   },
   textArea: {
     height: 120,
     textAlignVertical: "top",
   },
   numberInput: {
-    textAlign: 'right',
-    paddingRight: Platform.OS === 'ios' ? 16 : 12,
+    textAlign: "right",
+    paddingRight: Platform.OS === "ios" ? 16 : 12,
   },
   pickerContainer: {
     backgroundColor: "#FFFFFF",
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#E0E0E0",
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   picker: {
     height: 50,
   },
   dateButton: {
     backgroundColor: "#FFFFFF",
-    padding: Platform.OS === 'ios' ? 16 : 12,
+    padding: Platform.OS === "ios" ? 16 : 12,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: "#E0E0E0",
   },
   dateButtonText: {
-    fontSize: Platform.OS === 'ios' ? 16 : 14,
+    fontSize: Platform.OS === "ios" ? 16 : 14,
     color: "#1A1A1A",
   },
   submitButton: {
@@ -566,7 +603,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   projectCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 16,
     marginHorizontal: 16,
@@ -578,67 +615,67 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   projectHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   projectTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     flex: 1,
     marginRight: 8,
   },
   projectCategory: {
     fontSize: 12,
-    color: '#4CAF50',
-    backgroundColor: '#E8F5E9',
+    color: "#4CAF50",
+    backgroundColor: "#E8F5E9",
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   projectDescription: {
     fontSize: 14,
-    color: '#666666',
+    color: "#666666",
     marginBottom: 16,
   },
   projectStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: "#EEEEEE",
     paddingVertical: 12,
     marginBottom: 12,
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statLabel: {
     fontSize: 12,
-    color: '#666666',
+    color: "#666666",
     marginBottom: 4,
   },
   statValue: {
     fontSize: 14,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   projectDates: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   dateText: {
     fontSize: 12,
-    color: '#666666',
+    color: "#666666",
   },
   createButton: {
     backgroundColor: "#4CAF50",
-    width: Platform.OS === 'ios' ? 36 : 40,
-    height: Platform.OS === 'ios' ? 36 : 40,
-    borderRadius: Platform.OS === 'ios' ? 18 : 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: Platform.OS === "ios" ? 36 : 40,
+    height: Platform.OS === "ios" ? 36 : 40,
+    borderRadius: Platform.OS === "ios" ? 18 : 20,
+    justifyContent: "center",
+    alignItems: "center",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -653,15 +690,15 @@ const styles = StyleSheet.create({
   },
   createButtonText: {
     color: "#FFFFFF",
-    fontSize: Platform.OS === 'ios' ? 24 : 28,
+    fontSize: Platform.OS === "ios" ? 24 : 28,
     fontWeight: "400",
-    lineHeight: Platform.OS === 'ios' ? 28 : 32,
+    lineHeight: Platform.OS === "ios" ? 28 : 32,
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255,255,255,0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255,255,255,0.8)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   projectsListContent: {
     paddingBottom: 20,
@@ -672,54 +709,54 @@ const styles = StyleSheet.create({
   },
 
   pickerButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
   },
 
   pickerButtonText: {
     fontSize: 16,
-    color: '#1A1A1A',
+    color: "#1A1A1A",
   },
 
   datePickerModal: {
     flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: "flex-end",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-  
+
   datePickerContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
     paddingBottom: 20,
   },
-  
+
   datePickerHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: "#EEEEEE",
   },
-  
+
   datePickerCancelText: {
-    color: '#FF3B30',
+    color: "#FF3B30",
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: "600",
   },
-  
+
   datePickerDoneText: {
-    color: '#007AFF',
+    color: "#007AFF",
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: "600",
   },
-  
+
   datePickerIOS: {
     height: 216,
-    width: '100%',
+    width: "100%",
   },
 });

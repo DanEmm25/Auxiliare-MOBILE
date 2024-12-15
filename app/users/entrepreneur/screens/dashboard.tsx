@@ -63,20 +63,28 @@ const ProjectCard = ({ project }) => (
   <View style={styles.projectCard}>
     <Text style={styles.projectName}>{project.title}</Text>
     <Text style={styles.projectCategory}>{project.category}</Text>
-    
+
     <View style={styles.progressContainer}>
-      <View style={[styles.progressBar, { width: `${project.fundingProgress}%` }]} />
+      <View
+        style={[styles.progressBar, { width: `${project.fundingProgress}%` }]}
+      />
     </View>
-    
+
     <View style={styles.projectStats}>
-      <Text style={styles.statValue}>₱{project.current_funding.toLocaleString()}</Text>
-      <Text style={styles.statLabel}>of ₱{project.funding_goal.toLocaleString()}</Text>
+      <Text style={styles.statValue}>
+        ₱{project.current_funding.toLocaleString()}
+      </Text>
+      <Text style={styles.statLabel}>
+        of ₱{project.funding_goal.toLocaleString()}
+      </Text>
     </View>
-    
+
     <View style={styles.projectFooter}>
       <View style={styles.footerStat}>
         <Ionicons name="people-outline" size={16} color="#666" />
-        <Text style={styles.footerText}>{project.investor_count} investors</Text>
+        <Text style={styles.footerText}>
+          {project.investor_count} investors
+        </Text>
       </View>
       <View style={styles.footerStat}>
         <Ionicons name="time-outline" size={16} color="#666" />
@@ -88,7 +96,9 @@ const ProjectCard = ({ project }) => (
 
 export default function EntrepreneurDashboard() {
   const [refreshing, setRefreshing] = React.useState(false);
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(
+    null
+  );
   const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -96,7 +106,7 @@ export default function EntrepreneurDashboard() {
     try {
       const token = await AsyncStorage.getItem("token");
       const userStr = await AsyncStorage.getItem("user");
-      
+
       if (!token || !userStr) {
         console.error("No token or user data found");
         return;
@@ -106,9 +116,9 @@ export default function EntrepreneurDashboard() {
       setUserName(user.username);
 
       const response = await axios.get(
-        `http://192.168.1.46:8081/dashboard-data/${user.id}`,
+        `http://192.168.0.120:8081/dashboard-data/${user.id}`,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
@@ -174,7 +184,9 @@ export default function EntrepreneurDashboard() {
           />
           <MetricCard
             title="Total Funding"
-            value={`₱${(dashboardData?.metrics.totalFunding || 0).toLocaleString()}`}
+            value={`₱${(
+              dashboardData?.metrics.totalFunding || 0
+            ).toLocaleString()}`}
             icon="cash"
           />
           <MetricCard
@@ -187,7 +199,9 @@ export default function EntrepreneurDashboard() {
         <View style={styles.fundingOverview}>
           <Text style={styles.sectionTitle}>Funding Overview</Text>
           <View style={styles.overviewCard}>
-            <Text style={styles.overviewLabel}>Average Funding per Project</Text>
+            <Text style={styles.overviewLabel}>
+              Average Funding per Project
+            </Text>
             <Text style={styles.overviewValue}>
               ₱{(dashboardData?.metrics.averageFunding || 0).toLocaleString()}
             </Text>
@@ -195,7 +209,11 @@ export default function EntrepreneurDashboard() {
         </View>
 
         <SectionHeader title="Active Projects" actionText="View All" />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.projectsScroll}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.projectsScroll}
+        >
           {dashboardData?.recentProjects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
@@ -383,13 +401,13 @@ const styles = StyleSheet.create({
   },
   progressContainer: {
     height: 4,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     borderRadius: 2,
     marginVertical: 8,
   },
   progressBar: {
-    height: '100%',
-    backgroundColor: '#007AFF',
+    height: "100%",
+    backgroundColor: "#007AFF",
     borderRadius: 2,
   },
   projectStats: {
@@ -397,41 +415,41 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontWeight: "600",
+    color: "#1a1a1a",
   },
   statLabel: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
   },
   projectFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#eee',
+    borderTopColor: "#eee",
   },
   footerStat: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   footerText: {
     fontSize: 12,
-    color: '#666',
+    color: "#666",
     marginLeft: 4,
   },
   fundingOverview: {
     padding: 20,
   },
   overviewCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 16,
     borderRadius: 12,
     marginTop: 8,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
@@ -443,12 +461,12 @@ const styles = StyleSheet.create({
   },
   overviewLabel: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
   },
   overviewValue: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontWeight: "700",
+    color: "#1a1a1a",
     marginTop: 4,
   },
   projectsScroll: {

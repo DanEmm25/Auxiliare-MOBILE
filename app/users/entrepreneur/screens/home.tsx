@@ -37,7 +37,8 @@ const ProgressBar = ({ current, goal }) => {
     <View style={styles.progressContainer}>
       <View style={[styles.progressBar, { width: `${progress}%` }]} />
       <Text style={styles.progressText}>
-        ₱{current.toLocaleString()} of ₱{goal.toLocaleString()} ({progress.toFixed(1)}%)
+        ₱{current.toLocaleString()} of ₱{goal.toLocaleString()} (
+        {progress.toFixed(1)}%)
       </Text>
     </View>
   );
@@ -82,7 +83,7 @@ export default function Home() {
 
       const user = JSON.parse(userStr);
       const response = await axios.get(
-        `http://192.168.1.46:8081/user-projects/${user.id}`,
+        `http://192.168.0.120:8081/user-projects/${user.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -93,15 +94,17 @@ export default function Home() {
         const projectsWithInvestments = await Promise.all(
           response.data.projects.map(async (project) => {
             const investmentsResponse = await axios.get(
-              `http://192.168.1.46:8081/projects/${project.id}`,
+              `http://192.168.0.120:8081/projects/${project.id}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
               }
             );
             return {
               ...project,
-              current_funding: investmentsResponse.data.project.current_funding || 0,
-              total_investors: investmentsResponse.data.project.total_investors || 0,
+              current_funding:
+                investmentsResponse.data.project.current_funding || 0,
+              total_investors:
+                investmentsResponse.data.project.total_investors || 0,
             };
           })
         );
@@ -158,7 +161,7 @@ export default function Home() {
       }
 
       const response = await axios.delete(
-        `http://192.168.1.46:8081/delete-project/${projectId}`,
+        `http://192.168.0.120:8081/delete-project/${projectId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -199,7 +202,7 @@ export default function Home() {
       };
 
       const response = await axios.put(
-        `http://192.168.1.46:8081/update-project/${selectedProject.id}`,
+        `http://192.168.0.120:8081/update-project/${selectedProject.id}`,
         projectDataToSend,
         {
           headers: {
@@ -248,7 +251,9 @@ export default function Home() {
         <View style={styles.header}>
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerTitle}>My Projects</Text>
-            <Text style={styles.headerSubtitle}>Manage your crowdfunding campaigns</Text>
+            <Text style={styles.headerSubtitle}>
+              Manage your crowdfunding campaigns
+            </Text>
           </View>
           <TouchableOpacity
             style={styles.createButton}
@@ -266,7 +271,9 @@ export default function Home() {
         ) : projects.length === 0 ? (
           <View style={styles.emptyState}>
             <Text style={styles.emptyStateText}>No projects yet</Text>
-            <Text style={styles.emptyStateSubtext}>Start by creating your first project</Text>
+            <Text style={styles.emptyStateSubtext}>
+              Start by creating your first project
+            </Text>
           </View>
         ) : (
           <View style={styles.projectsGrid}>
@@ -281,18 +288,36 @@ export default function Home() {
                   <View>
                     <Text style={styles.projectTitle}>{project.title}</Text>
                     <View style={styles.categoryChip}>
-                      <Text style={styles.categoryText}>{project.category}</Text>
+                      <Text style={styles.categoryText}>
+                        {project.category}
+                      </Text>
                     </View>
                   </View>
-                  <View style={[
-                    styles.statusBadge,
-                    { backgroundColor: new Date(project.end_date) >= new Date() ? '#E8F5E9' : '#FFEBEE' }
-                  ]}>
-                    <Text style={[
-                      styles.statusText,
-                      { color: new Date(project.end_date) >= new Date() ? '#2E7D32' : '#C62828' }
-                    ]}>
-                      {new Date(project.end_date) >= new Date() ? 'ACTIVE' : 'ENDED'}
+                  <View
+                    style={[
+                      styles.statusBadge,
+                      {
+                        backgroundColor:
+                          new Date(project.end_date) >= new Date()
+                            ? "#E8F5E9"
+                            : "#FFEBEE",
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.statusText,
+                        {
+                          color:
+                            new Date(project.end_date) >= new Date()
+                              ? "#2E7D32"
+                              : "#C62828",
+                        },
+                      ]}
+                    >
+                      {new Date(project.end_date) >= new Date()
+                        ? "ACTIVE"
+                        : "ENDED"}
                     </Text>
                   </View>
                 </View>
@@ -303,7 +328,10 @@ export default function Home() {
 
                 <View style={styles.fundingSection}>
                   <Text style={styles.sectionTitle}>Funding Progress</Text>
-                  <ProgressBar current={project.current_funding} goal={project.funding_goal} />
+                  <ProgressBar
+                    current={project.current_funding}
+                    goal={project.funding_goal}
+                  />
                 </View>
 
                 <View style={styles.projectMetrics}>
@@ -321,7 +349,13 @@ export default function Home() {
                   </View>
                   <View style={styles.metricItem}>
                     <Text style={styles.metricValue}>
-                      {Math.max(0, Math.ceil((new Date(project.end_date) - new Date()) / (1000 * 60 * 60 * 24)))}
+                      {Math.max(
+                        0,
+                        Math.ceil(
+                          (new Date(project.end_date) - new Date()) /
+                            (1000 * 60 * 60 * 24)
+                        )
+                      )}
                     </Text>
                     <Text style={styles.metricLabel}>Days Left</Text>
                   </View>
@@ -363,10 +397,12 @@ export default function Home() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[
-            styles.modalContainer,
-            Platform.OS === 'ios' && styles.modalContainerIOS
-          ]}>
+          <View
+            style={[
+              styles.modalContainer,
+              Platform.OS === "ios" && styles.modalContainerIOS,
+            ]}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Edit Project</Text>
               <TouchableOpacity
@@ -455,13 +491,13 @@ export default function Home() {
                     <DateTimePicker
                       value={new Date(editedProject.start_date)}
                       mode="date"
-                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={(event, date) => {
                         setShowStartDatePicker(false);
                         if (date) {
                           setEditedProject({
                             ...editedProject,
-                            start_date: date.toISOString().split('T')[0],
+                            start_date: date.toISOString().split("T")[0],
                           });
                         }
                       }}
@@ -484,13 +520,13 @@ export default function Home() {
                     <DateTimePicker
                       value={new Date(editedProject.end_date)}
                       mode="date"
-                      display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                      display={Platform.OS === "ios" ? "spinner" : "default"}
                       onChange={(event, date) => {
                         setShowEndDatePicker(false);
                         if (date) {
                           setEditedProject({
                             ...editedProject,
-                            end_date: date.toISOString().split('T')[0],
+                            end_date: date.toISOString().split("T")[0],
                           });
                         }
                       }}
@@ -531,11 +567,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    padding: Platform.OS === 'ios' ? 20 : 16,
-    paddingTop: Platform.OS === 'ios' ? 60 : 20,
-    backgroundColor: '#FFFFFF',
+    padding: Platform.OS === "ios" ? 20 : 16,
+    paddingTop: Platform.OS === "ios" ? 60 : 20,
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: "#EEEEEE",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -553,22 +589,22 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   headerTitle: {
-    fontSize: Platform.OS === 'ios' ? 34 : 28,
-    fontWeight: Platform.OS === 'ios' ? '600' : '700',
+    fontSize: Platform.OS === "ios" ? 34 : 28,
+    fontWeight: Platform.OS === "ios" ? "600" : "700",
     color: "#1A1A1A",
     marginBottom: 4,
   },
   headerSubtitle: {
-    fontSize: Platform.OS === 'ios' ? 17 : 16,
+    fontSize: Platform.OS === "ios" ? 17 : 16,
     color: "#666666",
   },
   createButton: {
     backgroundColor: "#4CAF50",
-    width: Platform.OS === 'ios' ? 36 : 40,
-    height: Platform.OS === 'ios' ? 36 : 40,
-    borderRadius: Platform.OS === 'ios' ? 18 : 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: Platform.OS === "ios" ? 36 : 40,
+    height: Platform.OS === "ios" ? 36 : 40,
+    borderRadius: Platform.OS === "ios" ? 18 : 20,
+    justifyContent: "center",
+    alignItems: "center",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -583,9 +619,9 @@ const styles = StyleSheet.create({
   },
   createButtonText: {
     color: "#FFFFFF",
-    fontSize: Platform.OS === 'ios' ? 24 : 28,
+    fontSize: Platform.OS === "ios" ? 24 : 28,
     fontWeight: "400",
-    lineHeight: Platform.OS === 'ios' ? 28 : 32,
+    lineHeight: Platform.OS === "ios" ? 28 : 32,
   },
   emptyState: {
     flex: 1,
@@ -608,8 +644,8 @@ const styles = StyleSheet.create({
   },
   projectCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: Platform.OS === 'ios' ? 20 : 16,
-    padding: Platform.OS === 'ios' ? 24 : 20,
+    borderRadius: Platform.OS === "ios" ? 20 : 16,
+    padding: Platform.OS === "ios" ? 24 : 20,
     marginBottom: 16,
     ...Platform.select({
       ios: {
@@ -687,29 +723,29 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     marginTop: 16,
     paddingTop: 16,
-    borderTopWidth: Platform.OS === 'ios' ? StyleSheet.hairlineWidth : 1,
-    borderTopColor: Platform.OS === 'ios' ? '#C6C6C8' : '#EEEEEE',
+    borderTopWidth: Platform.OS === "ios" ? StyleSheet.hairlineWidth : 1,
+    borderTopColor: Platform.OS === "ios" ? "#C6C6C8" : "#EEEEEE",
   },
   editButton: {
-    backgroundColor: Platform.OS === 'ios' ? '#E5E5EA' : '#F0F0F0',
+    backgroundColor: Platform.OS === "ios" ? "#E5E5EA" : "#F0F0F0",
     paddingHorizontal: 16,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
-    borderRadius: Platform.OS === 'ios' ? 16 : 8,
+    paddingVertical: Platform.OS === "ios" ? 10 : 8,
+    borderRadius: Platform.OS === "ios" ? 16 : 8,
     marginRight: 12,
     minWidth: 80,
-    alignItems: 'center',
+    alignItems: "center",
   },
   editButtonText: {
     color: "#1A1A1A",
     fontWeight: "600",
   },
   deleteButton: {
-    backgroundColor: Platform.OS === 'ios' ? '#FFE5E5' : '#FFEBEE',
+    backgroundColor: Platform.OS === "ios" ? "#FFE5E5" : "#FFEBEE",
     paddingHorizontal: 16,
-    paddingVertical: Platform.OS === 'ios' ? 10 : 8,
-    borderRadius: Platform.OS === 'ios' ? 16 : 8,
+    paddingVertical: Platform.OS === "ios" ? 10 : 8,
+    borderRadius: Platform.OS === "ios" ? 16 : 8,
     minWidth: 80,
-    alignItems: 'center',
+    alignItems: "center",
   },
   deleteButtonText: {
     color: "#C62828",
@@ -746,7 +782,7 @@ const styles = StyleSheet.create({
   modalContainerIOS: {
     borderRadius: 14,
     padding: 24,
-    maxHeight: '80%',
+    maxHeight: "80%",
   },
   modalTitle: {
     fontSize: 20,
@@ -784,96 +820,96 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   progressContainer: {
-    height: Platform.OS === 'ios' ? 28 : 24,
-    backgroundColor: Platform.OS === 'ios' ? '#E5E5EA' : '#F2F2F7',
-    borderRadius: Platform.OS === 'ios' ? 14 : 12,
-    marginVertical: Platform.OS === 'ios' ? 12 : 8,
+    height: Platform.OS === "ios" ? 28 : 24,
+    backgroundColor: Platform.OS === "ios" ? "#E5E5EA" : "#F2F2F7",
+    borderRadius: Platform.OS === "ios" ? 14 : 12,
+    marginVertical: Platform.OS === "ios" ? 12 : 8,
   },
   progressBar: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     borderRadius: 12,
   },
   progressText: {
-    position: 'absolute',
-    width: '100%',
-    textAlign: 'center',
+    position: "absolute",
+    width: "100%",
+    textAlign: "center",
     lineHeight: 24,
     fontSize: 12,
-    color: '#333333',
-    fontWeight: '600',
+    color: "#333333",
+    fontWeight: "600",
   },
   fundingSection: {
     marginTop: 16,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    borderTopColor: "#EEEEEE",
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontWeight: "600",
+    color: "#1A1A1A",
     marginBottom: 8,
   },
   projectMetrics: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 16,
     marginTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    borderTopColor: "#EEEEEE",
   },
   metricItem: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
   },
   metricValue: {
     fontSize: 18,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontWeight: "700",
+    color: "#1A1A1A",
     marginBottom: 4,
   },
   metricLabel: {
     fontSize: 14,
-    color: '#666666',
+    color: "#666666",
   },
   modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: "#EEEEEE",
   },
   modalCloseText: {
     fontSize: 20,
-    color: '#666666',
+    color: "#666666",
     padding: 8,
   },
   modalScroll: {
-    maxHeight: Platform.OS === 'ios' ? '70%' : '80%',
+    maxHeight: Platform.OS === "ios" ? "70%" : "80%",
   },
   modalContent: {
     paddingVertical: 20,
   },
   modalLabel: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontWeight: "600",
+    color: "#1A1A1A",
     marginBottom: 8,
   },
   inputGroup: {
     marginBottom: 20,
   },
   pickerContainer: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
-    overflow: 'hidden',
+    borderColor: "#E0E0E0",
+    overflow: "hidden",
     marginTop: 4,
     ...Platform.select({
       ios: {
@@ -885,39 +921,39 @@ const styles = StyleSheet.create({
     }),
   },
   picker: {
-    height: Platform.OS === 'ios' ? 180 : 50,
-    width: '100%',
-    backgroundColor: 'transparent',
+    height: Platform.OS === "ios" ? 180 : 50,
+    width: "100%",
+    backgroundColor: "transparent",
   },
   pickerItem: {
     fontSize: 16,
     height: 120,
   },
   dateButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
   },
   dateButtonText: {
     fontSize: 16,
-    color: '#1A1A1A',
+    color: "#1A1A1A",
   },
   modalFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#EEEEEE',
+    borderTopColor: "#EEEEEE",
     gap: 12,
   },
   modalButton: {
     flex: 1,
-    padding: Platform.OS === 'ios' ? 16 : 14,
+    padding: Platform.OS === "ios" ? 16 : 14,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -931,24 +967,24 @@ const styles = StyleSheet.create({
     }),
   },
   cancelButton: {
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
   },
   saveButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
   },
   cancelButtonText: {
-    color: '#666666',
+    color: "#666666",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   saveButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   numberInput: {
-    textAlign: 'right',
+    textAlign: "right",
   },
 });

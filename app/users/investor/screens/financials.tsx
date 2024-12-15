@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,12 +10,12 @@ import {
   ScrollView,
   Platform,
   SafeAreaView,
-} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Financial = () => {
   const [balance, setBalance] = useState(0);
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [metrics, setMetrics] = useState({
     totalInvestments: 0,
@@ -26,22 +26,28 @@ const Financial = () => {
 
   const fetchData = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      
+      const token = await AsyncStorage.getItem("token");
+
       // Fetch balance
-      const balanceResponse = await fetch('http://192.168.1.46:8081/user-balance', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const balanceResponse = await fetch(
+        "http://192.168.0.120:8081/user-balance",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const balanceData = await balanceResponse.json();
-      
+
       // Fetch investment summary
-      const summaryResponse = await fetch('http://192.168.1.46:8081/user-investment-summary', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const summaryResponse = await fetch(
+        "http://192.168.0.120:8081/user-investment-summary",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const summaryData = await summaryResponse.json();
 
       if (balanceData.success) {
@@ -51,25 +57,28 @@ const Financial = () => {
         setMetrics(summaryData.summary);
       }
     } catch (error) {
-      console.error('Error fetching data:', error);
-      Alert.alert('Error', 'Failed to fetch financial data');
+      console.error("Error fetching data:", error);
+      Alert.alert("Error", "Failed to fetch financial data");
     }
   };
 
   const fetchTransactions = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      const response = await fetch('http://192.168.1.46:8081/transaction-history', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const token = await AsyncStorage.getItem("token");
+      const response = await fetch(
+        "http://192.168.0.120:8081/transaction-history",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
       const data = await response.json();
       if (data.success) {
         setTransactions(data.transactions);
       }
     } catch (error) {
-      console.error('Error fetching transactions:', error);
+      console.error("Error fetching transactions:", error);
     }
   };
 
@@ -80,17 +89,17 @@ const Financial = () => {
 
   const handleDeposit = async () => {
     if (!amount || parseFloat(amount) <= 0) {
-      Alert.alert('Error', 'Please enter a valid amount');
+      Alert.alert("Error", "Please enter a valid amount");
       return;
     }
 
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem('token');
-      const response = await fetch('http://192.168.1.46:8081/deposit', {
-        method: 'POST',
+      const token = await AsyncStorage.getItem("token");
+      const response = await fetch("http://192.168.0.120:8081/deposit", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ amount: parseFloat(amount) }),
@@ -98,15 +107,15 @@ const Financial = () => {
 
       const data = await response.json();
       if (data.success) {
-        Alert.alert('Success', 'Deposit successful');
+        Alert.alert("Success", "Deposit successful");
         fetchData();
-        setAmount('');
+        setAmount("");
       } else {
-        Alert.alert('Error', data.message);
+        Alert.alert("Error", data.message);
       }
     } catch (error) {
-      console.error('Error making deposit:', error);
-      Alert.alert('Error', 'Failed to process deposit');
+      console.error("Error making deposit:", error);
+      Alert.alert("Error", "Failed to process deposit");
     } finally {
       setLoading(false);
     }
@@ -117,10 +126,10 @@ const Financial = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
@@ -139,7 +148,9 @@ const Financial = () => {
         <View style={styles.metricsContainer}>
           <View style={styles.metricCard}>
             <Text style={styles.metricLabel}>Total Invested</Text>
-            <Text style={styles.metricValue}>{formatCurrency(metrics.totalInvested)}</Text>
+            <Text style={styles.metricValue}>
+              {formatCurrency(metrics.totalInvested)}
+            </Text>
           </View>
           <View style={styles.metricCard}>
             <Text style={styles.metricLabel}>Active Investments</Text>
@@ -160,7 +171,7 @@ const Financial = () => {
             value={amount}
             onChangeText={setAmount}
           />
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.depositButton}
             onPress={handleDeposit}
             disabled={loading}
@@ -186,11 +197,17 @@ const Financial = () => {
                     {formatDate(transaction.date)}
                   </Text>
                 </View>
-                <Text style={[
-                  styles.transactionAmount,
-                  { color: transaction.type === 'deposit' ? '#4CAF50' : '#F44336' }
-                ]}>
-                  {transaction.type === 'deposit' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                <Text
+                  style={[
+                    styles.transactionAmount,
+                    {
+                      color:
+                        transaction.type === "deposit" ? "#4CAF50" : "#F44336",
+                    },
+                  ]}
+                >
+                  {transaction.type === "deposit" ? "+" : "-"}
+                  {formatCurrency(transaction.amount)}
                 </Text>
               </View>
             ))
@@ -206,31 +223,31 @@ const Financial = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: "#F5F7FA",
   },
   container: {
     flex: 1,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: "#F5F7FA",
   },
   header: {
     padding: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
+    borderBottomColor: "#E0E0E0",
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontWeight: "600",
+    color: "#1A1A1A",
   },
   balanceCard: {
     margin: 16,
     padding: 20,
-    backgroundColor: '#2196F3',
+    backgroundColor: "#2196F3",
     borderRadius: 16,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
@@ -241,30 +258,30 @@ const styles = StyleSheet.create({
     }),
   },
   balanceLabel: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
     opacity: 0.9,
   },
   balanceAmount: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 36,
-    fontWeight: '700',
+    fontWeight: "700",
     marginTop: 8,
   },
   metricsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     padding: 16,
   },
   metricCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     padding: 16,
     borderRadius: 12,
     marginHorizontal: 4,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
@@ -276,22 +293,22 @@ const styles = StyleSheet.create({
   },
   metricLabel: {
     fontSize: 12,
-    color: '#666666',
+    color: "#666666",
     marginBottom: 4,
   },
   metricValue: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontWeight: "600",
+    color: "#1A1A1A",
   },
   depositSection: {
     margin: 16,
     padding: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
@@ -303,38 +320,38 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontWeight: "600",
+    color: "#1A1A1A",
     marginBottom: 16,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
     marginBottom: 16,
-    backgroundColor: '#F5F7FA',
+    backgroundColor: "#F5F7FA",
   },
   depositButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: "#2196F3",
     padding: 16,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   depositButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   transactionSection: {
     margin: 16,
     padding: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.05,
         shadowRadius: 4,
@@ -345,32 +362,32 @@ const styles = StyleSheet.create({
     }),
   },
   transactionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: "#F0F0F0",
   },
   transactionInfo: {
     flex: 1,
   },
   transactionType: {
     fontSize: 16,
-    color: '#1A1A1A',
+    color: "#1A1A1A",
     marginBottom: 4,
   },
   transactionDate: {
     fontSize: 14,
-    color: '#666666',
+    color: "#666666",
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   emptyText: {
-    textAlign: 'center',
-    color: '#666666',
+    textAlign: "center",
+    color: "#666666",
     fontSize: 14,
     paddingVertical: 20,
   },

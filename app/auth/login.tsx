@@ -52,7 +52,7 @@ export default function Login() {
 
       console.log("Sending request with:", requestData);
 
-      const response = await fetch("http://192.168.1.46:8081/login", {
+      const response = await fetch("http://192.168.0.120:8081/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,7 +96,7 @@ export default function Login() {
       console.log("Requesting password reset for:", resetEmail);
 
       const response = await fetch(
-        "http://192.168.1.46:8081/request-password-reset",
+        "http://192.168.0.120:8081/request-password-reset",
         {
           method: "POST",
           headers: {
@@ -110,7 +110,7 @@ export default function Login() {
       console.log("Reset response:", data);
 
       if (data.success) {
-        alert(`Reset token: ${data.resetToken}`); // Remove in production, should come via email
+        alert(`Reset token: ${data.resetToken}`);
         setResetStep(2);
       } else {
         alert(data.message || "Failed to request password reset");
@@ -131,7 +131,7 @@ export default function Login() {
 
     setResetLoading(true);
     try {
-      const response = await fetch("http://192.168.1.46:8081/reset-password", {
+      const response = await fetch("http://192.168.0.120:8081/reset-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

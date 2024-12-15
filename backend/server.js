@@ -332,19 +332,19 @@ app.get("/user-projects/:userId", authenticateToken, (req, res) => {
     WHERE p.user_id = ?
     GROUP BY p.id
     ORDER BY p.created_at DESC`;
-  
+
   db.query(sql, [userId], (err, results) => {
     if (err) {
       console.error("Error fetching projects:", err);
       return res.status(500).json({
         success: false,
-        message: "Error fetching projects"
+        message: "Error fetching projects",
       });
     }
-    
+
     res.status(200).json({
       success: true,
-      projects: results
+      projects: results,
     });
   });
 });
@@ -414,10 +414,18 @@ app.get("/projects/:id", authenticateToken, (req, res) => {
 app.put("/update-project/:projectId", authenticateToken, (req, res) => {
   const user_id = req.user.id;
   const projectId = req.params.projectId;
-  const { title, description, funding_goal, category, start_date, end_date } = req.body;
+  const { title, description, funding_goal, category, start_date, end_date } =
+    req.body;
 
   // Basic validation
-  if (!title || !description || !funding_goal || !category || !start_date || !end_date) {
+  if (
+    !title ||
+    !description ||
+    !funding_goal ||
+    !category ||
+    !start_date ||
+    !end_date
+  ) {
     return res.status(400).json({
       success: false,
       message: "All fields are required",
@@ -445,7 +453,16 @@ app.put("/update-project/:projectId", authenticateToken, (req, res) => {
 
     db.query(
       sqlUpdate,
-      [title, description, funding_goal, category, start_date, end_date, updated_at, projectId],
+      [
+        title,
+        description,
+        funding_goal,
+        category,
+        start_date,
+        end_date,
+        updated_at,
+        projectId,
+      ],
       (err, result) => {
         if (err) {
           return res.status(500).json({
@@ -501,24 +518,25 @@ app.delete("/delete-project/:projectId", authenticateToken, (req, res) => {
 // Get user profile endpoint
 app.get("/user-profile", authenticateToken, (req, res) => {
   const userId = req.user.id;
-  
-  const sql = "SELECT user_id, username, email, first_name, last_name, user_type FROM users WHERE user_id = ?";
+
+  const sql =
+    "SELECT user_id, username, email, first_name, last_name, user_type FROM users WHERE user_id = ?";
   db.query(sql, [userId], (err, results) => {
     if (err) {
       return res.status(500).json({
         success: false,
-        message: "Error fetching user profile"
+        message: "Error fetching user profile",
       });
     }
     if (results.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "User not found"
+        message: "User not found",
       });
     }
     res.status(200).json({
       success: true,
-      user: results[0]
+      user: results[0],
     });
   });
 });
@@ -532,7 +550,7 @@ app.put("/update-profile", authenticateToken, async (req, res) => {
   if (!username || !email || !first_name || !last_name) {
     return res.status(400).json({
       success: false,
-      message: "All fields are required"
+      message: "All fields are required",
     });
   }
 
@@ -547,20 +565,20 @@ app.put("/update-profile", authenticateToken, async (req, res) => {
     (err, result) => {
       if (err) {
         console.error("Update error:", err);
-        if (err.code === 'ER_DUP_ENTRY') {
+        if (err.code === "ER_DUP_ENTRY") {
           return res.status(400).json({
             success: false,
-            message: "Username or email already exists"
+            message: "Username or email already exists",
           });
         }
         return res.status(500).json({
           success: false,
-          message: "Error updating profile"
+          message: "Error updating profile",
         });
       }
       res.status(200).json({
         success: true,
-        message: "Profile updated successfully"
+        message: "Profile updated successfully",
       });
     }
   );
@@ -581,53 +599,69 @@ app.get("/dashboard-data/:userId", authenticateToken, async (req, res) => {
       LEFT JOIN investments i ON p.id = i.project_id
       WHERE p.user_id = ?
       GROUP BY p.id`;
-    
+
     db.query(projectsQuery, [userId], (err, projects) => {
       if (err) {
         console.error("Error fetching dashboard data:", err);
         return res.status(500).json({
           success: false,
-          message: "Error fetching dashboard data"
+          message: "Error fetching dashboard data",
         });
       }
 
       // Calculate enhanced metrics
       const metrics = {
         totalProjects: projects.length,
-        activeProjects: projects.filter(p => new Date(p.end_date) >= new Date()).length,
-        completedProjects: projects.filter(p => new Date(p.end_date) < new Date()).length,
-        totalFunding: projects.reduce((sum, p) => sum + parseFloat(p.current_funding), 0),
-        totalInvestors: new Set(projects.flatMap(p => p.investor_count)).size,
-        averageFunding: projects.length ? 
-          (projects.reduce((sum, p) => sum + parseFloat(p.current_funding), 0) / projects.length) : 0,
-        fundingProgress: projects.map(p => ({
+        activeProjects: projects.filter(
+          (p) => new Date(p.end_date) >= new Date()
+        ).length,
+        completedProjects: projects.filter(
+          (p) => new Date(p.end_date) < new Date()
+        ).length,
+        totalFunding: projects.reduce(
+          (sum, p) => sum + parseFloat(p.current_funding),
+          0
+        ),
+        totalInvestors: new Set(projects.flatMap((p) => p.investor_count)).size,
+        averageFunding: projects.length
+          ? projects.reduce(
+              (sum, p) => sum + parseFloat(p.current_funding),
+              0
+            ) / projects.length
+          : 0,
+        fundingProgress: projects.map((p) => ({
           projectId: p.id,
           title: p.title,
-          progress: (p.current_funding / p.funding_goal) * 100
-        }))
+          progress: (p.current_funding / p.funding_goal) * 100,
+        })),
       };
 
       // Get recent projects with more details
       const recentProjects = projects
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
         .slice(0, 5)
-        .map(p => ({
+        .map((p) => ({
           ...p,
           fundingProgress: (p.current_funding / p.funding_goal) * 100,
-          daysLeft: Math.max(0, Math.ceil((new Date(p.end_date) - new Date()) / (1000 * 60 * 60 * 24)))
+          daysLeft: Math.max(
+            0,
+            Math.ceil(
+              (new Date(p.end_date) - new Date()) / (1000 * 60 * 60 * 24)
+            )
+          ),
         }));
 
       res.status(200).json({
         success: true,
         metrics,
-        recentProjects
+        recentProjects,
       });
     });
   } catch (error) {
     console.error("Dashboard data error:", error);
     res.status(500).json({
       success: false,
-      message: "Error fetching dashboard data"
+      message: "Error fetching dashboard data",
     });
   }
 });
@@ -636,17 +670,17 @@ app.get("/dashboard-data/:userId", authenticateToken, async (req, res) => {
 app.get("/user-balance", authenticateToken, (req, res) => {
   const userId = req.user.id;
   const sql = "SELECT balance FROM users WHERE user_id = ?";
-  
+
   db.query(sql, [userId], (err, results) => {
     if (err) {
       return res.status(500).json({
         success: false,
-        message: "Error fetching balance"
+        message: "Error fetching balance",
       });
     }
     res.status(200).json({
       success: true,
-      balance: results[0]?.balance || 0
+      balance: results[0]?.balance || 0,
     });
   });
 });
@@ -659,7 +693,7 @@ app.post("/deposit", authenticateToken, async (req, res) => {
   if (!amount || amount <= 0) {
     return res.status(400).json({
       success: false,
-      message: "Invalid amount"
+      message: "Invalid amount",
     });
   }
 
@@ -668,7 +702,7 @@ app.post("/deposit", authenticateToken, async (req, res) => {
     if (err) {
       return res.status(500).json({
         success: false,
-        message: "Transaction error"
+        message: "Transaction error",
       });
     }
 
@@ -703,13 +737,13 @@ app.post("/deposit", authenticateToken, async (req, res) => {
           db.rollback();
           return res.status(500).json({
             success: false,
-            message: "Error finalizing deposit"
+            message: "Error finalizing deposit",
           });
         }
 
         res.status(200).json({
           success: true,
-          message: "Deposit successful"
+          message: "Deposit successful",
         });
       });
     } catch (error) {
@@ -717,7 +751,7 @@ app.post("/deposit", authenticateToken, async (req, res) => {
       console.error("Deposit error:", error);
       res.status(500).json({
         success: false,
-        message: "Error processing deposit"
+        message: "Error processing deposit",
       });
     }
   });
@@ -744,19 +778,19 @@ app.get("/transaction-history", authenticateToken, (req, res) => {
     FROM deposits
     WHERE user_id = ?
     ORDER BY date DESC`;
-  
+
   db.query(sql, [userId, userId], (err, results) => {
     if (err) {
       console.error("Error fetching transactions:", err);
       return res.status(500).json({
         success: false,
-        message: "Error fetching transaction history"
+        message: "Error fetching transaction history",
       });
     }
-    
+
     res.status(200).json({
       success: true,
-      transactions: results
+      transactions: results,
     });
   });
 });
@@ -770,7 +804,7 @@ app.post("/invest", authenticateToken, async (req, res) => {
   if (!project_id || !investment_amount || investment_amount <= 0) {
     return res.status(400).json({
       success: false,
-      message: "Invalid investment details"
+      message: "Invalid investment details",
     });
   }
 
@@ -779,7 +813,7 @@ app.post("/invest", authenticateToken, async (req, res) => {
     if (err) {
       return res.status(500).json({
         success: false,
-        message: "Transaction error"
+        message: "Transaction error",
       });
     }
 
@@ -797,7 +831,7 @@ app.post("/invest", authenticateToken, async (req, res) => {
         db.rollback();
         return res.status(400).json({
           success: false,
-          message: "Insufficient balance"
+          message: "Insufficient balance",
         });
       }
 
@@ -820,7 +854,7 @@ app.post("/invest", authenticateToken, async (req, res) => {
             investment_date,
             investment_status,
             investment_date,
-            investment_date
+            investment_date,
           ],
           (err, result) => {
             if (err) reject(err);
@@ -830,12 +864,17 @@ app.post("/invest", authenticateToken, async (req, res) => {
       });
 
       // Update user balance
-      const updateBalanceQuery = "UPDATE users SET balance = balance - ? WHERE user_id = ?";
+      const updateBalanceQuery =
+        "UPDATE users SET balance = balance - ? WHERE user_id = ?";
       await new Promise((resolve, reject) => {
-        db.query(updateBalanceQuery, [investment_amount, investor_id], (err, result) => {
-          if (err) reject(err);
-          resolve(result);
-        });
+        db.query(
+          updateBalanceQuery,
+          [investment_amount, investor_id],
+          (err, result) => {
+            if (err) reject(err);
+            resolve(result);
+          }
+        );
       });
 
       // Commit transaction
@@ -844,13 +883,13 @@ app.post("/invest", authenticateToken, async (req, res) => {
           db.rollback();
           return res.status(500).json({
             success: false,
-            message: "Error finalizing investment"
+            message: "Error finalizing investment",
           });
         }
 
         res.status(200).json({
           success: true,
-          message: "Investment successful"
+          message: "Investment successful",
         });
       });
     } catch (error) {
@@ -858,7 +897,7 @@ app.post("/invest", authenticateToken, async (req, res) => {
       console.error("Investment error:", error);
       res.status(500).json({
         success: false,
-        message: "Error processing investment"
+        message: "Error processing investment",
       });
     }
   });
@@ -873,19 +912,19 @@ app.get("/user-investments", authenticateToken, (req, res) => {
     JOIN projects p ON i.project_id = p.id 
     WHERE i.investor_id = ? 
     ORDER BY i.investment_date DESC`;
-  
+
   db.query(sql, [userId], (err, results) => {
     if (err) {
       console.error("Error fetching investments:", err);
       return res.status(500).json({
         success: false,
-        message: "Error fetching investments"
+        message: "Error fetching investments",
       });
     }
-    
+
     res.status(200).json({
       success: true,
-      investments: results
+      investments: results,
     });
   });
 });
@@ -900,23 +939,23 @@ app.get("/user-investment-summary", authenticateToken, (req, res) => {
       COUNT(CASE WHEN investment_status = 'active' THEN 1 END) as active_investments
     FROM investments 
     WHERE investor_id = ?`;
-  
+
   db.query(sql, [userId], (err, results) => {
     if (err) {
       console.error("Error fetching investment summary:", err);
       return res.status(500).json({
         success: false,
-        message: "Error fetching investment summary"
+        message: "Error fetching investment summary",
       });
     }
-    
+
     res.status(200).json({
       success: true,
       summary: {
         totalInvestments: results[0].total_investments || 0,
         totalInvested: results[0].total_invested || 0,
-        activeInvestments: results[0].active_investments || 0
-      }
+        activeInvestments: results[0].active_investments || 0,
+      },
     });
   });
 });
@@ -968,14 +1007,14 @@ app.post("/request-password-reset", async (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({
         success: false,
-        message: "Error checking email"
+        message: "Error checking email",
       });
     }
 
     if (results.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "No account found with this email"
+        message: "No account found with this email",
       });
     }
 
@@ -984,13 +1023,14 @@ app.post("/request-password-reset", async (req, res) => {
     const tokenExpiry = new Date(Date.now() + 3600000); // 1 hour validity
 
     // Store reset token in database
-    const updateSql = "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?";
+    const updateSql =
+      "UPDATE users SET reset_token = ?, reset_token_expiry = ? WHERE email = ?";
     db.query(updateSql, [resetToken, tokenExpiry, email], (updateErr) => {
       if (updateErr) {
         console.error("Error updating reset token:", updateErr);
         return res.status(500).json({
           success: false,
-          message: "Error generating reset token"
+          message: "Error generating reset token",
         });
       }
 
@@ -999,7 +1039,7 @@ app.post("/request-password-reset", async (req, res) => {
       res.status(200).json({
         success: true,
         message: "Reset token generated successfully",
-        resetToken: resetToken // Remove this in production, should be sent via email
+        resetToken: resetToken, // Remove this in production, should be sent via email
       });
     });
   });
@@ -1009,36 +1049,38 @@ app.post("/request-password-reset", async (req, res) => {
 app.post("/reset-password", async (req, res) => {
   const { email, resetToken, newPassword } = req.body;
 
-  const sql = "SELECT * FROM users WHERE email = ? AND reset_token = ? AND reset_token_expiry > NOW()";
+  const sql =
+    "SELECT * FROM users WHERE email = ? AND reset_token = ? AND reset_token_expiry > NOW()";
   db.query(sql, [email, resetToken], async (err, results) => {
     if (err || results.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "Invalid or expired reset token"
+        message: "Invalid or expired reset token",
       });
     }
 
     try {
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      const updateSql = "UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE email = ?";
-      
+      const updateSql =
+        "UPDATE users SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE email = ?";
+
       db.query(updateSql, [hashedPassword, email], (err) => {
         if (err) {
           return res.status(500).json({
             success: false,
-            message: "Error updating password"
+            message: "Error updating password",
           });
         }
 
         res.status(200).json({
           success: true,
-          message: "Password updated successfully"
+          message: "Password updated successfully",
         });
       });
     } catch (error) {
       res.status(500).json({
         success: false,
-        message: "Error hashing new password"
+        message: "Error hashing new password",
       });
     }
   });
@@ -1056,8 +1098,8 @@ app.use((err, req, res, next) => {
 // Update the listen call at the bottom of the file
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on port ${port}`);
-  console.log(`Server accessible at http://192.168.1.46:${port}`);
+  console.log(`Server accessible at http://192.168.0.120:${port}`);
   console.log(
-    `For mobile devices, use your computer's IP address: http://192.168.1.46:${port}`
+    `For mobile devices, use your computer's IP address: http://192.168.0.120:${port}`
   );
 });

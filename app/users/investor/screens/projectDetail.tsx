@@ -18,7 +18,8 @@ const ProgressBar = ({ current, goal }) => {
     <View style={styles.progressContainer}>
       <View style={[styles.progressBar, { width: `${progress}%` }]} />
       <Text style={styles.progressText}>
-        ₱{current.toLocaleString()} of ₱{goal.toLocaleString()} ({progress.toFixed(1)}%)
+        ₱{current.toLocaleString()} of ₱{goal.toLocaleString()} (
+        {progress.toFixed(1)}%)
       </Text>
     </View>
   );
@@ -28,14 +29,14 @@ const ProjectDetail = () => {
   const { id } = useLocalSearchParams();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [investAmount, setInvestAmount] = useState('');
+  const [investAmount, setInvestAmount] = useState("");
   const [userBalance, setUserBalance] = useState(0);
   const router = useRouter();
 
   const fetchBalance = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch("http://192.168.1.46:8081/user-balance", {
+      const response = await fetch("http://192.168.0.120:8081/user-balance", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -54,7 +55,7 @@ const ProjectDetail = () => {
       try {
         const token = await AsyncStorage.getItem("token");
         const response = await fetch(
-          `http://192.168.1.46:8081/projects/${id}`,
+          `http://192.168.0.120:8081/projects/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -92,7 +93,7 @@ const ProjectDetail = () => {
 
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch("http://192.168.1.46:8081/invest", {
+      const response = await fetch("http://192.168.0.120:8081/invest", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -117,7 +118,7 @@ const ProjectDetail = () => {
             { text: "Stay Here", style: "cancel" },
           ]
         );
-        setInvestAmount('');
+        setInvestAmount("");
         await fetchBalance();
       } else {
         Alert.alert("Error", data.message);
@@ -148,15 +149,29 @@ const ProjectDetail = () => {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{project.title}</Text>
-        <View style={[
-          styles.statusBadge,
-          { backgroundColor: new Date(project.end_date) >= new Date() ? '#E8F5E9' : '#FFEBEE' }
-        ]}>
-          <Text style={[
-            styles.statusText,
-            { color: new Date(project.end_date) >= new Date() ? '#2E7D32' : '#C62828' }
-          ]}>
-            {new Date(project.end_date) >= new Date() ? 'ACTIVE' : 'ENDED'}
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor:
+                new Date(project.end_date) >= new Date()
+                  ? "#E8F5E9"
+                  : "#FFEBEE",
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.statusText,
+              {
+                color:
+                  new Date(project.end_date) >= new Date()
+                    ? "#2E7D32"
+                    : "#C62828",
+              },
+            ]}
+          >
+            {new Date(project.end_date) >= new Date() ? "ACTIVE" : "ENDED"}
           </Text>
         </View>
       </View>
@@ -170,7 +185,10 @@ const ProjectDetail = () => {
 
       <View style={styles.fundingCard}>
         <Text style={styles.sectionTitle}>Funding Progress</Text>
-        <ProgressBar current={project.current_funding} goal={project.funding_goal} />
+        <ProgressBar
+          current={project.current_funding}
+          goal={project.funding_goal}
+        />
         <View style={styles.statsGrid}>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>{project.total_investors}</Text>
@@ -178,13 +196,22 @@ const ProjectDetail = () => {
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>
-              {Math.max(0, Math.ceil((new Date(project.end_date) - new Date()) / (1000 * 60 * 60 * 24)))}
+              {Math.max(
+                0,
+                Math.ceil(
+                  (new Date(project.end_date) - new Date()) /
+                    (1000 * 60 * 60 * 24)
+                )
+              )}
             </Text>
             <Text style={styles.statLabel}>Days Left</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statValue}>
-              {((project.current_funding / project.funding_goal) * 100).toFixed(1)}%
+              {((project.current_funding / project.funding_goal) * 100).toFixed(
+                1
+              )}
+              %
             </Text>
             <Text style={styles.statLabel}>Funded</Text>
           </View>
@@ -203,16 +230,18 @@ const ProjectDetail = () => {
           value={investAmount}
           onChangeText={setInvestAmount}
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[
             styles.investButton,
-            new Date(project.end_date) < new Date() && styles.disabledButton
+            new Date(project.end_date) < new Date() && styles.disabledButton,
           ]}
           onPress={handleInvest}
           disabled={new Date(project.end_date) < new Date()}
         >
           <Text style={styles.investButtonText}>
-            {new Date(project.end_date) >= new Date() ? 'Invest Now' : 'Project Ended'}
+            {new Date(project.end_date) >= new Date()
+              ? "Invest Now"
+              : "Project Ended"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -227,12 +256,12 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: "#EEEEEE",
   },
   infoCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     margin: 16,
     padding: 20,
     borderRadius: 16,
@@ -243,7 +272,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   fundingCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     margin: 16,
     padding: 20,
     borderRadius: 16,
@@ -254,7 +283,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   investCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
     margin: 16,
     padding: 20,
     borderRadius: 16,
@@ -277,113 +306,113 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   categoryChip: {
-    backgroundColor: '#F0F0F0',
+    backgroundColor: "#F0F0F0",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   categoryText: {
     fontSize: 14,
-    color: '#666666',
-    textTransform: 'uppercase',
+    color: "#666666",
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1A1A1A',
+    fontWeight: "600",
+    color: "#1A1A1A",
     marginBottom: 16,
   },
   statsGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginTop: 16,
   },
   statItem: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   statValue: {
     fontSize: 20,
-    fontWeight: '700',
-    color: '#007AFF',
+    fontWeight: "700",
+    color: "#007AFF",
   },
   statLabel: {
     fontSize: 14,
-    color: '#666666',
+    color: "#666666",
     marginTop: 4,
   },
   balanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   balanceLabel: {
     fontSize: 16,
-    color: '#666666',
+    color: "#666666",
   },
   balanceValue: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#4CAF50',
+    fontWeight: "600",
+    color: "#4CAF50",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: "#E0E0E0",
     borderRadius: 8,
     padding: 16,
     fontSize: 16,
     marginBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: "#FFFFFF",
   },
   investButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     paddingVertical: 16,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
   },
   disabledButton: {
-    backgroundColor: '#CCCCCC',
+    backgroundColor: "#CCCCCC",
   },
   investButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   statusBadge: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   progressContainer: {
     height: 24,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: "#F2F2F7",
     borderRadius: 12,
     marginVertical: 8,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressBar: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     borderRadius: 12,
   },
   progressText: {
-    position: 'absolute',
-    width: '100%',
-    textAlign: 'center',
+    position: "absolute",
+    width: "100%",
+    textAlign: "center",
     lineHeight: 24,
     fontSize: 12,
-    color: '#333333',
-    fontWeight: '600',
+    color: "#333333",
+    fontWeight: "600",
   },
   loadingContainer: {
     flex: 1,

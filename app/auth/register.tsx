@@ -39,9 +39,9 @@ export default function Register() {
   // Update API URL configuration
   const API_URL = __DEV__
     ? Platform.select({
-        android: "http://192.168.1.46:8081", // Replace with your computer's IP address
-        ios: "http://192.168.1.46:8081", // Replace with your computer's IP address
-        default: "http://192.168.1.46:8081",
+        android: "http://192.168.0.120:8081", // Replace with your computer's IP address
+        ios: "http://192.168.0.120:8081", // Replace with your computer's IP address
+        default: "http://192.168.0.120:8081",
       })
     : "http://your-production-url.com";
 

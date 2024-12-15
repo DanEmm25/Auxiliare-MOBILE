@@ -16,7 +16,8 @@ const ProgressBar = ({ current, goal }) => {
     <View style={styles.progressContainer}>
       <View style={[styles.progressBar, { width: `${progress}%` }]} />
       <Text style={styles.progressText}>
-        ₱{current.toLocaleString()} of ₱{goal.toLocaleString()} ({progress.toFixed(1)}%)
+        ₱{current.toLocaleString()} of ₱{goal.toLocaleString()} (
+        {progress.toFixed(1)}%)
       </Text>
     </View>
   );
@@ -31,7 +32,7 @@ const Home = () => {
     const fetchProjects = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
-        const response = await fetch("http://192.168.1.46:8081/projects", {
+        const response = await fetch("http://192.168.0.120:8081/projects", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -65,15 +66,25 @@ const Home = () => {
           <Text style={styles.title}>{item.title}</Text>
           <Text style={styles.category}>{item.category}</Text>
         </View>
-        <View style={[
-          styles.statusBadge,
-          { backgroundColor: new Date(item.end_date) >= new Date() ? '#E8F5E9' : '#FFEBEE' }
-        ]}>
-          <Text style={[
-            styles.statusText,
-            { color: new Date(item.end_date) >= new Date() ? '#2E7D32' : '#C62828' }
-          ]}>
-            {new Date(item.end_date) >= new Date() ? 'ACTIVE' : 'ENDED'}
+        <View
+          style={[
+            styles.statusBadge,
+            {
+              backgroundColor:
+                new Date(item.end_date) >= new Date() ? "#E8F5E9" : "#FFEBEE",
+            },
+          ]}
+        >
+          <Text
+            style={[
+              styles.statusText,
+              {
+                color:
+                  new Date(item.end_date) >= new Date() ? "#2E7D32" : "#C62828",
+              },
+            ]}
+          >
+            {new Date(item.end_date) >= new Date() ? "ACTIVE" : "ENDED"}
           </Text>
         </View>
       </View>
@@ -86,10 +97,17 @@ const Home = () => {
         <ProgressBar current={item.current_funding} goal={item.funding_goal} />
         <View style={styles.statsRow}>
           <Text style={styles.investors}>
-            {item.total_investors} investor{item.total_investors !== 1 ? 's' : ''}
+            {item.total_investors} investor
+            {item.total_investors !== 1 ? "s" : ""}
           </Text>
           <Text style={styles.daysLeft}>
-            {Math.max(0, Math.ceil((new Date(item.end_date) - new Date()) / (1000 * 60 * 60 * 24)))} days left
+            {Math.max(
+              0,
+              Math.ceil(
+                (new Date(item.end_date) - new Date()) / (1000 * 60 * 60 * 24)
+              )
+            )}{" "}
+            days left
           </Text>
         </View>
       </View>
@@ -116,7 +134,7 @@ const Home = () => {
       />
       <TouchableOpacity
         style={styles.navigateButton}
-        onPress={() => router.push('/users/investor/screens/portfolio')}
+        onPress={() => router.push("/users/investor/screens/portfolio")}
       >
         <Text style={styles.navigateButtonText}>View Portfolio</Text>
       </TouchableOpacity>
@@ -132,8 +150,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '700',
-    color: '#1A1A1A',
+    fontWeight: "700",
+    color: "#1A1A1A",
     marginBottom: 20,
     marginTop: 8,
   },
@@ -155,9 +173,9 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
     marginBottom: 12,
   },
   title: {
@@ -169,7 +187,7 @@ const styles = StyleSheet.create({
   category: {
     fontSize: 14,
     color: "#666666",
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   statusBadge: {
@@ -179,7 +197,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   description: {
     fontSize: 16,
@@ -191,19 +209,19 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 8,
   },
   investors: {
     fontSize: 14,
     color: "#666666",
-    fontWeight: '500',
+    fontWeight: "500",
   },
   daysLeft: {
     fontSize: 14,
     color: "#007AFF",
-    fontWeight: '600',
+    fontWeight: "600",
   },
   loadingContainer: {
     flex: 1,
@@ -212,32 +230,32 @@ const styles = StyleSheet.create({
   },
   progressContainer: {
     height: 8,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: "#F2F2F7",
     borderRadius: 4,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressBar: {
-    height: '100%',
-    backgroundColor: '#4CAF50',
+    height: "100%",
+    backgroundColor: "#4CAF50",
     borderRadius: 4,
   },
   progressText: {
     fontSize: 14,
-    color: '#4A4A4A',
-    fontWeight: '500',
+    color: "#4A4A4A",
+    fontWeight: "500",
     marginTop: 8,
   },
   navigateButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     padding: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
   },
   navigateButtonText: {
-    color: '#FFFFFF',
+    color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });
 

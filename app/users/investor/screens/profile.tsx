@@ -38,7 +38,7 @@ export default function Profile() {
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await axios.get(
-        "http://192.168.1.46:8081/user-profile",
+        "http://192.168.0.120:8081/user-profile",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -58,7 +58,7 @@ export default function Profile() {
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await axios.put(
-        "http://192.168.1.46:8081/update-profile",
+        "http://192.168.0.120:8081/update-profile",
         userData,
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -85,104 +85,102 @@ export default function Profile() {
   };
 
   return (
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Profile</Text>
-          </View>
-          {!isEditing ? (
+    <ScrollView style={styles.container}>
+      <View style={styles.header}>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>Profile</Text>
+        </View>
+        {!isEditing ? (
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => setIsEditing(true)}
+          >
+            <Text style={styles.editButtonText}>Edit</Text>
+          </TouchableOpacity>
+        ) : (
+          <View style={styles.buttonGroup}>
             <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => setIsEditing(true)}
+              style={[styles.actionButton, styles.cancelButton]}
+              onPress={handleCancel}
             >
-              <Text style={styles.editButtonText}>Edit</Text>
+              <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-          ) : (
-            <View style={styles.buttonGroup}>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.cancelButton]}
-                onPress={handleCancel}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionButton, styles.saveButton]}
-                onPress={handleSave}
-              >
-                <Text style={styles.saveButtonText}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.profileSection}>
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person-circle" size={100} color="#007AFF" />
+            <TouchableOpacity
+              style={[styles.actionButton, styles.saveButton]}
+              onPress={handleSave}
+            >
+              <Text style={styles.saveButtonText}>Save</Text>
+            </TouchableOpacity>
           </View>
-          <Text
-            style={styles.nameText}
-          >{`${userData.first_name} ${userData.last_name}`}</Text>
-          <Text style={styles.roleText}>{userData.user_type}</Text>
+        )}
+      </View>
+
+      <View style={styles.profileSection}>
+        <View style={styles.avatarContainer}>
+          <Ionicons name="person-circle" size={100} color="#007AFF" />
         </View>
+        <Text
+          style={styles.nameText}
+        >{`${userData.first_name} ${userData.last_name}`}</Text>
+        <Text style={styles.roleText}>{userData.user_type}</Text>
+      </View>
 
-        <View style={styles.form}>
-          <View style={styles.card}>
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Role</Text>
-              <Text style={styles.roleText}>{userData.user_type}</Text>
-            </View>
+      <View style={styles.form}>
+        <View style={styles.card}>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Role</Text>
+            <Text style={styles.roleText}>{userData.user_type}</Text>
+          </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Username</Text>
-              <TextInput
-                style={[styles.input, !isEditing && styles.disabledInput]}
-                value={userData.username}
-                onChangeText={(text) =>
-                  setUserData({ ...userData, username: text })
-                }
-                editable={isEditing}
-              />
-            </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Username</Text>
+            <TextInput
+              style={[styles.input, !isEditing && styles.disabledInput]}
+              value={userData.username}
+              onChangeText={(text) =>
+                setUserData({ ...userData, username: text })
+              }
+              editable={isEditing}
+            />
+          </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={[styles.input, !isEditing && styles.disabledInput]}
-                value={userData.email}
-                onChangeText={(text) =>
-                  setUserData({ ...userData, email: text })
-                }
-                editable={isEditing}
-                keyboardType="email-address"
-              />
-            </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Email</Text>
+            <TextInput
+              style={[styles.input, !isEditing && styles.disabledInput]}
+              value={userData.email}
+              onChangeText={(text) => setUserData({ ...userData, email: text })}
+              editable={isEditing}
+              keyboardType="email-address"
+            />
+          </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>First Name</Text>
-              <TextInput
-                style={[styles.input, !isEditing && styles.disabledInput]}
-                value={userData.first_name}
-                onChangeText={(text) =>
-                  setUserData({ ...userData, first_name: text })
-                }
-                editable={isEditing}
-              />
-            </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>First Name</Text>
+            <TextInput
+              style={[styles.input, !isEditing && styles.disabledInput]}
+              value={userData.first_name}
+              onChangeText={(text) =>
+                setUserData({ ...userData, first_name: text })
+              }
+              editable={isEditing}
+            />
+          </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Last Name</Text>
-              <TextInput
-                style={[styles.input, !isEditing && styles.disabledInput]}
-                value={userData.last_name}
-                onChangeText={(text) =>
-                  setUserData({ ...userData, last_name: text })
-                }
-                editable={isEditing}
-              />
-            </View>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Last Name</Text>
+            <TextInput
+              style={[styles.input, !isEditing && styles.disabledInput]}
+              value={userData.last_name}
+              onChangeText={(text) =>
+                setUserData({ ...userData, last_name: text })
+              }
+              editable={isEditing}
+            />
           </View>
         </View>
-      </ScrollView>
+      </View>
+    </ScrollView>
   );
 }
 

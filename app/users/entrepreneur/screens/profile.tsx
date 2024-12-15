@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,28 +7,28 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  Image
-} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import EntrepreneurLayout from '../layout';
-import axios from 'axios';
-import { Ionicons } from '@expo/vector-icons';
+  Image,
+} from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import EntrepreneurLayout from "../layout";
+import axios from "axios";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
-    username: '',
-    email: '',
-    first_name: '',
-    last_name: '',
-    user_type: ''
+    username: "",
+    email: "",
+    first_name: "",
+    last_name: "",
+    user_type: "",
   });
   const [originalData, setOriginalData] = useState({
-    username: '',
-    email: '',
-    first_name: '',
-    last_name: '',
-    user_type: ''
+    username: "",
+    email: "",
+    first_name: "",
+    last_name: "",
+    user_type: "",
   });
 
   useEffect(() => {
@@ -37,42 +37,45 @@ export default function Profile() {
 
   const loadUserProfile = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      const response = await axios.get('http://192.168.1.46:8081/user-profile', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const token = await AsyncStorage.getItem("token");
+      const response = await axios.get(
+        "http://192.168.0.120:8081/user-profile",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (response.data.success) {
         setUserData(response.data.user);
         setOriginalData(response.data.user);
       }
     } catch (error) {
-      console.error('Error loading profile:', error);
-      Alert.alert('Error', 'Failed to load profile data');
+      console.error("Error loading profile:", error);
+      Alert.alert("Error", "Failed to load profile data");
     }
   };
 
   const handleSave = async () => {
     try {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem("token");
       const response = await axios.put(
-        'http://192.168.1.46:8081/update-profile',
+        "http://192.168.0.120:8081/update-profile",
         userData,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
 
       if (response.data.success) {
-        Alert.alert('Success', 'Profile updated successfully');
+        Alert.alert("Success", "Profile updated successfully");
         setIsEditing(false);
         setOriginalData(userData);
       }
     } catch (error: any) {
-      console.error('Error updating profile:', error);
+      console.error("Error updating profile:", error);
       Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Failed to update profile'
+        "Error",
+        error.response?.data?.message || "Failed to update profile"
       );
     }
   };
@@ -118,7 +121,9 @@ export default function Profile() {
           <View style={styles.avatarContainer}>
             <Ionicons name="person-circle" size={100} color="#007AFF" />
           </View>
-          <Text style={styles.nameText}>{`${userData.first_name} ${userData.last_name}`}</Text>
+          <Text
+            style={styles.nameText}
+          >{`${userData.first_name} ${userData.last_name}`}</Text>
           <Text style={styles.roleText}>{userData.user_type}</Text>
         </View>
 
@@ -146,7 +151,9 @@ export default function Profile() {
               <TextInput
                 style={[styles.input, !isEditing && styles.disabledInput]}
                 value={userData.email}
-                onChangeText={(text) => setUserData({ ...userData, email: text })}
+                onChangeText={(text) =>
+                  setUserData({ ...userData, email: text })
+                }
                 editable={isEditing}
                 keyboardType="email-address"
               />
@@ -185,23 +192,23 @@ export default function Profile() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: "#F8F9FA",
   },
   header: {
     padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderBottomColor: '#E9ECEF',
+    borderBottomColor: "#E9ECEF",
   },
   headerTitleContainer: {
     flex: 1,
   },
   headerTitle: {
     fontSize: 22,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontWeight: "600",
+    color: "#1a1a1a",
   },
   form: {
     padding: 20,
@@ -211,42 +218,42 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 8,
-    color: '#1a1a1a',
+    color: "#1a1a1a",
   },
   input: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E9ECEF',
+    borderColor: "#E9ECEF",
   },
   disabledInput: {
-    backgroundColor: '#F8F9FA',
-    color: '#666',
+    backgroundColor: "#F8F9FA",
+    color: "#666",
   },
   roleText: {
     fontSize: 16,
-    color: '#666',
-    backgroundColor: '#F8F9FA',
+    color: "#666",
+    backgroundColor: "#F8F9FA",
     padding: 12,
     borderRadius: 8,
   },
   editButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
     marginLeft: 10,
   },
   editButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   buttonGroup: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 8,
   },
   actionButton: {
@@ -255,44 +262,44 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   cancelButton: {
-    backgroundColor: '#DC3545',
+    backgroundColor: "#DC3545",
   },
   saveButton: {
-    backgroundColor: '#28A745',
+    backgroundColor: "#28A745",
   },
   cancelButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   saveButtonText: {
-    color: '#FFF',
+    color: "#FFF",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   profileSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 20,
   },
   avatarContainer: {
     width: 100,
     height: 100,
     borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   nameText: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#1a1a1a',
+    fontWeight: "700",
+    color: "#1a1a1a",
   },
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     padding: 20,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E9ECEF',
+    borderColor: "#E9ECEF",
   },
 });
