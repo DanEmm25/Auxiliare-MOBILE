@@ -32,7 +32,7 @@ const Home = () => {
     const fetchProjects = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
-        const response = await fetch("http://192.168.1.48:8081/projects", {
+        const response = await fetch("http://192.168.1.50:8081/projects", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

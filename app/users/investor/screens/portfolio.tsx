@@ -68,7 +68,7 @@ const Portfolio = () => {
     const fetchPortfolio = async () => {
       try {
         const token = await AsyncStorage.getItem("token");
-        const response = await fetch("http://192.168.1.48:8081/portfolio", {
+        const response = await fetch("http://192.168.1.50:8081/portfolio", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

@@ -65,7 +65,7 @@ export default function Projects() {
       const user = JSON.parse(userStr);
 
       const response = await axios.get(
-        `http://192.168.1.48:8081/user-projects/${user.id}`,
+        `http://192.168.1.50:8081/user-projects/${user.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -133,7 +133,7 @@ export default function Projects() {
       console.log("Using authorization token:", token);
 
       const response = await axios.post(
-        "http://192.168.1.48:8081/create-project",
+        "http://192.168.1.50:8081/create-project",
         projectDataToSend,
         {
           headers: {

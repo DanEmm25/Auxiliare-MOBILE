@@ -1098,8 +1098,8 @@ app.use((err, req, res, next) => {
 // Update the listen call at the bottom of the file
 app.listen(port, "0.0.0.0", () => {
   console.log(`Server running on port ${port}`);
-  console.log(`Server accessible at http://192.168.1.48:${port}`);
+  console.log(`Server accessible at http://192.168.1.50:${port}`);
   console.log(
-    `For mobile devices, use your computer's IP address: http://192.168.1.48:${port}`
+    `For mobile devices, use your computer's IP address: http://192.168.1.50:${port}`
   );
 });

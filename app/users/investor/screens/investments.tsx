@@ -31,7 +31,7 @@ const Investments = () => {
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await fetch(
-        "http://192.168.1.48:8081/user-investments",
+        "http://192.168.1.50:8081/user-investments",
         {
           headers: {
             Authorization: `Bearer ${token}`,
