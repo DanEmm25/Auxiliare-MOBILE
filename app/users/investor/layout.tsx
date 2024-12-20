@@ -33,6 +33,7 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
     investments: "/users/investor/screens/investments",
     financials: "/users/investor/screens/financials",
     profile: "/users/investor/screens/profile",
+    messages: "/users/screens/conversations",
   };
 
   const getRouteFromPathname = (path: string): string => {
@@ -59,6 +60,8 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
   const handleNavigation = (route: string) => {
     if (route === "Logout") {
       handleLogout();
+    } else if (route === "Messages") {
+      router.push("/users/screens/conversations");
     } else {
       const routes: { [key: string]: string } = {
         Home: "/users/investor/screens/home",
@@ -67,7 +70,7 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
         Financials: "/users/investor/screens/financials",
         Profile: "/users/investor/screens/profile",
       };
-      router.push(routes[route]);
+      router.push(routes[route] || "/users/investor/screens/home");
     }
   };
 
@@ -138,6 +141,7 @@ const InvestorLayout = ({ children }: { children: ReactNode }) => {
               { name: "Home", icon: "home" },
               { name: "Portfolio", icon: "briefcase" },
               { name: "Investments", icon: "trending-up" },
+              { name: "Messages", icon: "chatbubbles" },
               { name: "Financials", icon: "stats-chart" },
               { name: "Profile", icon: "person" },
               { name: "Logout", icon: "exit" },

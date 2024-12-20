@@ -83,7 +83,7 @@ export default function Home() {
 
       const user = JSON.parse(userStr);
       const response = await axios.get(
-        `http://192.168.1.50:8081/user-projects/${user.id}`,
+        `http://192.168.1.18:8081/user-projects/${user.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -94,7 +94,7 @@ export default function Home() {
         const projectsWithInvestments = await Promise.all(
           response.data.projects.map(async (project) => {
             const investmentsResponse = await axios.get(
-              `http://192.168.1.50:8081/projects/${project.id}`,
+              `http://192.168.1.18:8081/projects/${project.id}`,
               {
                 headers: { Authorization: `Bearer ${token}` },
               }
@@ -161,7 +161,7 @@ export default function Home() {
       }
 
       const response = await axios.delete(
-        `http://192.168.1.50:8081/delete-project/${projectId}`,
+        `http://192.168.1.18:8081/delete-project/${projectId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -202,7 +202,7 @@ export default function Home() {
       };
 
       const response = await axios.put(
-        `http://192.168.1.50:8081/update-project/${selectedProject.id}`,
+        `http://192.168.1.18:8081/update-project/${selectedProject.id}`,
         projectDataToSend,
         {
           headers: {

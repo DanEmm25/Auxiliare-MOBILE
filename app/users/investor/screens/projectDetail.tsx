@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Ionicons } from "@expo/vector-icons";
 
 const ProgressBar = ({ current, goal }) => {
   const progress = Math.min((current / goal) * 100, 100);
@@ -31,12 +32,13 @@ const ProjectDetail = () => {
   const [loading, setLoading] = useState(true);
   const [investAmount, setInvestAmount] = useState("");
   const [userBalance, setUserBalance] = useState(0);
+  const [ws, setWs] = useState(null);
   const router = useRouter();
 
   const fetchBalance = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch("http://192.168.1.50:8081/user-balance", {
+      const response = await fetch("http://192.168.1.18:8081/user-balance", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -55,7 +57,7 @@ const ProjectDetail = () => {
       try {
         const token = await AsyncStorage.getItem("token");
         const response = await fetch(
-          `http://192.168.1.50:8081/projects/${id}`,
+          `http://192.168.1.18:8081/projects/${id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -80,6 +82,46 @@ const ProjectDetail = () => {
     fetchBalance();
   }, [id]);
 
+  useEffect(() => {
+    initializeWebSocket();
+    return () => {
+      if (ws) ws.close();
+    };
+  }, [id]);
+
+  const initializeWebSocket = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+      const wsUrl = `ws://192.168.1.18:8081?token=${token}`;
+      const newWs = new WebSocket(wsUrl);
+
+      newWs.onopen = () => {
+        console.log("WebSocket connected");
+      };
+
+      newWs.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.type === "project_update" && data.project_id === id) {
+          // Update project details
+          setProject(data.project);
+        }
+      };
+
+      newWs.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+
+      newWs.onclose = () => {
+        console.log("WebSocket closed");
+        setTimeout(initializeWebSocket, 3000);
+      };
+
+      setWs(newWs);
+    } catch (error) {
+      console.error("Error initializing WebSocket:", error);
+    }
+  };
+
   const handleInvest = async () => {
     if (!investAmount || parseFloat(investAmount) <= 0) {
       Alert.alert("Error", "Please enter a valid amount");
@@ -93,7 +135,7 @@ const ProjectDetail = () => {
 
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch("http://192.168.1.50:8081/invest", {
+      const response = await fetch("http://192.168.1.18:8081/invest", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -149,6 +191,22 @@ const ProjectDetail = () => {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>{project.title}</Text>
+        <TouchableOpacity
+          style={styles.messageButton}
+          onPress={() =>
+            router.push({
+              pathname: "/users/screens/messages",
+              params: {
+                project_id: project.id,
+                recipient_id: project.user_id,
+                project_title: project.title,
+              },
+            })
+          }
+        >
+          <Ionicons name="chatbubble-outline" size={24} color="#FFFFFF" />
+          <Text style={styles.messageButtonText}>Message Entrepreneur</Text>
+        </TouchableOpacity>
         <View
           style={[
             styles.statusBadge,
@@ -418,6 +476,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  messageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#007AFF",
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+  messageButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
 

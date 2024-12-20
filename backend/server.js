@@ -5,6 +5,8 @@ const bcrypt = require("bcrypt");
 const db = require("./db"); // Import the database connection
 const jwt = require("jsonwebtoken"); // Add JWT package
 const secretKey = "your_secret_key"; // Replace with a secure key
+const http = require("http");
+const WebSocket = require("ws");
 
 const app = express();
 const port = 8081;
@@ -1086,6 +1088,144 @@ app.post("/reset-password", async (req, res) => {
   });
 });
 
+// Create a new conversation or get existing one
+app.post("/conversations", authenticateToken, async (req, res) => {
+  const { project_id, recipient_id } = req.body;
+  const sender_id = req.user.id;
+
+  try {
+    // Check if conversation exists
+    const checkSql = `
+      SELECT id FROM conversations 
+      WHERE (user1_id = ? AND user2_id = ? AND project_id = ?) 
+      OR (user1_id = ? AND user2_id = ? AND project_id = ?)`;
+
+    db.query(
+      checkSql,
+      [
+        sender_id,
+        recipient_id,
+        project_id,
+        recipient_id,
+        sender_id,
+        project_id,
+      ],
+      (err, results) => {
+        if (err) {
+          return res
+            .status(500)
+            .json({ success: false, message: "Database error" });
+        }
+
+        if (results.length > 0) {
+          return res.json({ success: true, conversation_id: results[0].id });
+        }
+
+        // Create new conversation
+        const insertSql = `
+        INSERT INTO conversations (user1_id, user2_id, project_id, created_at) 
+        VALUES (?, ?, ?, NOW())`;
+
+        db.query(
+          insertSql,
+          [sender_id, recipient_id, project_id],
+          (err, result) => {
+            if (err) {
+              return res
+                .status(500)
+                .json({
+                  success: false,
+                  message: "Error creating conversation",
+                });
+            }
+            res.json({ success: true, conversation_id: result.insertId });
+          }
+        );
+      }
+    );
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Get user's conversations
+app.get("/conversations", authenticateToken, (req, res) => {
+  const user_id = req.user.id;
+
+  const sql = `
+    SELECT c.*, 
+           p.title as project_title,
+           u1.username as user1_name,
+           u2.username as user2_name,
+           (SELECT message FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message,
+           (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY created_at DESC LIMIT 1) as last_message_date
+    FROM conversations c
+    JOIN projects p ON c.project_id = p.id
+    JOIN users u1 ON c.user1_id = u1.user_id
+    JOIN users u2 ON c.user2_id = u2.user_id
+    WHERE c.user1_id = ? OR c.user2_id = ?
+    ORDER BY last_message_date DESC`;
+
+  db.query(sql, [user_id, user_id], (err, results) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, conversations: results });
+  });
+});
+
+// Get messages for a conversation
+app.get(
+  "/conversations/:conversationId/messages",
+  authenticateToken,
+  (req, res) => {
+    const { conversationId } = req.params;
+    const user_id = req.user.id;
+
+    const sql = `
+    SELECT m.*, u.username as sender_name 
+    FROM messages m
+    JOIN users u ON m.sender_id = u.user_id
+    WHERE m.conversation_id = ?
+    ORDER BY m.created_at ASC`;
+
+    db.query(sql, [conversationId], (err, results) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error" });
+      }
+      res.json({ success: true, messages: results });
+    });
+  }
+);
+
+// Send a message
+app.post(
+  "/conversations/:conversationId/messages",
+  authenticateToken,
+  (req, res) => {
+    const { conversationId } = req.params;
+    const { message } = req.body;
+    const sender_id = req.user.id;
+
+    const sql = `
+    INSERT INTO messages (conversation_id, sender_id, message, created_at)
+    VALUES (?, ?, ?, NOW())`;
+
+    db.query(sql, [conversationId, sender_id, message], (err, result) => {
+      if (err) {
+        return res
+          .status(500)
+          .json({ success: false, message: "Error sending message" });
+      }
+      res.json({ success: true, message_id: result.insertId });
+    });
+  }
+);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -1095,11 +1235,90 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Update the listen call at the bottom of the file
-app.listen(port, "0.0.0.0", () => {
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+// Store connected clients
+const clients = new Map();
+
+wss.on("connection", (ws, req) => {
+  console.log("New WebSocket connection");
+  const token = new URL(req.url, "ws://localhost").searchParams.get("token");
+
+  if (!token) {
+    console.log("No token provided");
+    ws.close();
+    return;
+  }
+
+  jwt.verify(token, secretKey, (err, user) => {
+    if (err) {
+      console.error("Token verification failed:", err);
+      ws.close();
+      return;
+    }
+
+    console.log("User connected:", user.id);
+    clients.set(user.id, ws);
+
+    ws.on("message", async (data) => {
+      try {
+        const message = JSON.parse(data.toString());
+        console.log("Received message:", message);
+
+        if (message.type === "chat") {
+          // Save message to database
+          const sql = `
+            INSERT INTO messages (conversation_id, sender_id, message, created_at)
+            VALUES (?, ?, ?, NOW())
+          `;
+          
+          db.query(sql, [message.conversation_id, user.id, message.text], (err, result) => {
+            if (err) {
+              console.error("Error saving message:", err);
+              return;
+            }
+
+            // Prepare message to send
+            const outgoingMessage = {
+              type: "chat",
+              message: {
+                id: result.insertId,
+                conversation_id: message.conversation_id,
+                sender_id: user.id,
+                message: message.text,
+                created_at: new Date().toISOString(),
+                sender_name: user.username
+              }
+            };
+
+            // Send to sender
+            ws.send(JSON.stringify(outgoingMessage));
+
+            // Send to recipient if online
+            const recipientWs = clients.get(parseInt(message.recipient_id));
+            if (recipientWs && recipientWs.readyState === WebSocket.OPEN) {
+              recipientWs.send(JSON.stringify(outgoingMessage));
+            }
+          });
+        }
+      } catch (error) {
+        console.error("Error processing message:", error);
+      }
+    });
+
+    ws.on("close", () => {
+      console.log("Client disconnected:", user.id);
+      clients.delete(user.id);
+    });
+  });
+});
+
+// Update the listen call
+server.listen(port, "0.0.0.0", () => {
   console.log(`Server running on port ${port}`);
-  console.log(`Server accessible at http://192.168.1.50:${port}`);
+  console.log(`Server accessible at http://192.168.1.18:${port}`);
   console.log(
-    `For mobile devices, use your computer's IP address: http://192.168.1.50:${port}`
+    `For mobile devices, use your computer's IP address: http://192.168.1.18:${port}`
   );
 });

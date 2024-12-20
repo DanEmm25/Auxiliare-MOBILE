@@ -30,7 +30,7 @@ const Financial = () => {
 
       // Fetch balance
       const balanceResponse = await fetch(
-        "http://192.168.1.50:8081/user-balance",
+        "http://192.168.1.18:8081/user-balance",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -41,7 +41,7 @@ const Financial = () => {
 
       // Fetch investment summary
       const summaryResponse = await fetch(
-        "http://192.168.1.50:8081/user-investment-summary",
+        "http://192.168.1.18:8081/user-investment-summary",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -66,7 +66,7 @@ const Financial = () => {
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await fetch(
-        "http://192.168.1.50:8081/transaction-history",
+        "http://192.168.1.18:8081/transaction-history",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -96,7 +96,7 @@ const Financial = () => {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem("token");
-      const response = await fetch("http://192.168.1.50:8081/deposit", {
+      const response = await fetch("http://192.168.1.18:8081/deposit", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

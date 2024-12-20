@@ -116,7 +116,7 @@ export default function EntrepreneurDashboard() {
       setUserName(user.username);
 
       const response = await axios.get(
-        `http://192.168.1.50:8081/dashboard-data/${user.id}`,
+        `http://192.168.1.18:8081/dashboard-data/${user.id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

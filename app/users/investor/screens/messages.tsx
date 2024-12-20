@@ -2,20 +2,39 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   View,
   Text,
-  TextInput,
-  Button,
+  StyleSheet,
   FlatList,
+  TextInput,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  RefreshControl,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useLocalSearchParams } from "expo-router";
 
-const ChatScreen = ({ route }) => {
-  const { conversation_id, project_id, receiver_id } = route.params;
-  const [messages, setMessages] = useState([]);
+interface Message {
+  id: number;
+  sender_id: number;
+  message: string;
+  created_at: string;
+  sender_name: string;
+}
+
+interface ConversationMeta {
+  project_title: string;
+  user1_name: string;
+  user2_name: string;
+}
+
+export default function Messages() {
+  const route = useRouter().query;
+  const { conversation_id, project_id, recipient_id } = route.params;
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const flatListRef = useRef(null);
-  const ws = useRef(null);
+  const flatListRef = useRef<FlatList>(null);
+  const ws = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     const initializeWebSocket = async () => {
@@ -45,6 +64,7 @@ const ChatScreen = ({ route }) => {
 
         ws.current.onclose = () => {
           console.log("WebSocket closed");
+          // Optionally attempt to reconnect
         };
       } catch (error) {
         console.error("Error initializing WebSocket:", error);
@@ -76,7 +96,7 @@ const ChatScreen = ({ route }) => {
           },
           body: JSON.stringify({
             message: newMessage,
-            receiver_id: receiver_id,
+            receiver_id: recipient_id,
           }),
         }
       );
@@ -88,7 +108,7 @@ const ChatScreen = ({ route }) => {
             JSON.stringify({
               type: "chat",
               conversation_id: conversation_id,
-              receiver_id: receiver_id,
+              receiver_id: recipient_id,
               project_id: project_id,
               text: newMessage,
             })
@@ -99,7 +119,7 @@ const ChatScreen = ({ route }) => {
           message_id: data.message.message_id,
           conversation_id: conversation_id,
           sender_id: user.id,
-          receiver_id: receiver_id,
+          receiver_id: recipient_id,
           project_id: project_id,
           message_content: newMessage,
           sent_at: data.message.sent_at,
@@ -169,6 +189,4 @@ const ChatScreen = ({ route }) => {
       </View>
     </View>
   );
-};
-
-export default ChatScreen;
+}

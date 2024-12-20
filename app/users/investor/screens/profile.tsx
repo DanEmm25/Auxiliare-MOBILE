@@ -38,7 +38,7 @@ export default function Profile() {
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await axios.get(
-        "http://192.168.1.50:8081/user-profile",
+        "http://192.168.1.18:8081/user-profile",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -58,7 +58,7 @@ export default function Profile() {
     try {
       const token = await AsyncStorage.getItem("token");
       const response = await axios.put(
-        "http://192.168.1.50:8081/update-profile",
+        "http://192.168.1.18:8081/update-profile",
         userData,
         {
           headers: { Authorization: `Bearer ${token}` },

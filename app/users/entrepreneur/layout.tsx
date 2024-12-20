@@ -21,9 +21,12 @@ const SIDEBAR_COLLAPSED_WIDTH = Platform.OS === "web" ? 70 : 60;
 
 const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
   const [isOpen, setIsOpen] = useState(false); // Changed to false by default
-  const sidebarAnim = useRef(new Animated.Value(SIDEBAR_COLLAPSED_WIDTH)).current; // Changed initial value
+  const sidebarAnim = useRef(
+    new Animated.Value(SIDEBAR_COLLAPSED_WIDTH)
+  ).current; // Changed initial value
   const router = useRouter();
   const pathname = usePathname();
+  const [ws, setWs] = useState<WebSocket | null>(null);
 
   const getRouteFromPathname = (path: string): string => {
     const routes: { [key: string]: string } = {
@@ -31,6 +34,7 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
       "/users/entrepreneur/screens/dashboard": "Dashboard",
       "/users/entrepreneur/screens/projects": "Projects",
       "/users/entrepreneur/screens/profile": "Profile",
+      "/users/screens/conversations": "Messages", // Add this line
     };
     return routes[path] || "Home";
   };
@@ -54,6 +58,7 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
         Dashboard: "/users/entrepreneur/screens/dashboard",
         Projects: "/users/entrepreneur/screens/projects",
         Profile: "/users/entrepreneur/screens/profile",
+        Messages: "/users/screens/conversations", // Add this line
       };
       router.push(routes[route]);
     }
@@ -94,6 +99,46 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
     setIsOpen(open ?? !isOpen);
   };
 
+  useEffect(() => {
+    const initializeWebSocket = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const wsUrl = `ws://192.168.1.18:8081?token=${token}`;
+        ws.current = new WebSocket(wsUrl);
+
+        ws.current.onopen = () => {
+          console.log("WebSocket connected");
+        };
+
+        ws.current.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          if (data.type === "chat") {
+            // Handle incoming chat message
+            // Optionally update a global state or trigger notifications
+            console.log("New message received:", data.message);
+          }
+        };
+
+        ws.current.onerror = (error) => {
+          console.error("WebSocket error:", error);
+        };
+
+        ws.current.onclose = () => {
+          console.log("WebSocket closed");
+          // Optionally attempt to reconnect
+        };
+      } catch (error) {
+        console.error("Error initializing WebSocket:", error);
+      }
+    };
+
+    initializeWebSocket();
+
+    return () => {
+      if (ws.current) ws.current.close();
+    };
+  }, []);
+
   return (
     <View style={styles.container}>
       <Animated.View
@@ -122,126 +167,40 @@ const EntrepreneurLayout = ({ children }: { children: ReactNode }) => {
           </View>
 
           <Animated.View style={[styles.menuItems]}>
-            <TouchableOpacity
-              style={[
-                styles.navItem,
-                currentRoute === "Home" && styles.activeNavItem,
-              ]}
-              onPress={() => handleNavigation("Home")}
-            >
-              <Ionicons
-                name="home"
-                size={22}
-                color={currentRoute === "Home" ? "#007AFF" : "#666"}
-              />
-              {isOpen && (
-                <Animated.Text
-                  style={[
-                    styles.navText,
-                    currentRoute === "Home" && styles.activeNavText,
-                  ]}
-                  numberOfLines={1}
-                >
-                  Home
-                </Animated.Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.navItem,
-                currentRoute === "Dashboard" && styles.activeNavItem,
-              ]}
-              onPress={() => handleNavigation("Dashboard")}
-            >
-              <Ionicons
-                name="grid"
-                size={22}
-                color={currentRoute === "Dashboard" ? "#007AFF" : "#666"}
-              />
-              {isOpen && (
-                <Animated.Text
-                  style={[
-                    styles.navText,
-                    currentRoute === "Dashboard" && styles.activeNavText,
-                  ]}
-                  numberOfLines={1}
-                >
-                  Dashboard
-                </Animated.Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.navItem,
-                currentRoute === "Projects" && styles.activeNavItem,
-              ]}
-              onPress={() => handleNavigation("Projects")}
-            >
-              <Ionicons
-                name="briefcase"
-                size={22}
-                color={currentRoute === "Projects" ? "#007AFF" : "#666"}
-              />
-              {isOpen && (
-                <Animated.Text
-                  style={[
-                    styles.navText,
-                    currentRoute === "Projects" && styles.activeNavText,
-                  ]}
-                  numberOfLines={1}
-                >
-                  Projects
-                </Animated.Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.navItem,
-                currentRoute === "Profile" && styles.activeNavItem,
-              ]}
-              onPress={() => handleNavigation("Profile")}
-            >
-              <Ionicons
-                name="person"
-                size={22}
-                color={currentRoute === "Profile" ? "#007AFF" : "#666"}
-              />
-              {isOpen && (
-                <Animated.Text
-                  style={[
-                    styles.navText,
-                    currentRoute === "Profile" && styles.activeNavText,
-                  ]}
-                  numberOfLines={1}
-                >
-                  Profile
-                </Animated.Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.navItem,
-                currentRoute === "Logout" && styles.activeNavItem,
-              ]}
-              onPress={() => handleNavigation("Logout")}
-            >
-              <Ionicons
-                name="exit"
-                size={22}
-                color={currentRoute === "Logout" ? "#007AFF" : "#666"}
-              />
-              {isOpen && (
-                <Animated.Text
-                  style={[
-                    styles.navText,
-                    currentRoute === "Logout" && styles.activeNavText,
-                  ]}
-                  numberOfLines={1}
-                >
-                  Logout
-                </Animated.Text>
-              )}
-            </TouchableOpacity>
+            {[
+              { name: "Home", icon: "home" },
+              { name: "Dashboard", icon: "grid" },
+              { name: "Projects", icon: "briefcase" },
+              { name: "Messages", icon: "chatbubbles" }, // Add this line
+              { name: "Profile", icon: "person" },
+              { name: "Logout", icon: "exit" },
+            ].map((item) => (
+              <TouchableOpacity
+                key={item.name}
+                style={[
+                  styles.navItem,
+                  currentRoute === item.name && styles.activeNavItem,
+                ]}
+                onPress={() => handleNavigation(item.name)}
+              >
+                <Ionicons
+                  name={item.icon}
+                  size={22}
+                  color={currentRoute === item.name ? "#007AFF" : "#666"}
+                />
+                {isOpen && (
+                  <Animated.Text
+                    style={[
+                      styles.navText,
+                      currentRoute === item.name && styles.activeNavText,
+                    ]}
+                    numberOfLines={1}
+                  >
+                    {item.name}
+                  </Animated.Text>
+                )}
+              </TouchableOpacity>
+            ))}
           </Animated.View>
         </View>
       </Animated.View>
